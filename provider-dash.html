@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vision - Provider Dashboard</title>
+    <link rel="stylesheet" href="../css/provider.css"> 
+    <link rel="stylesheet" href="../css/provider-dashboard.css"> 
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-main">
+
+    <div class="dash-wrapper">
+        <aside class="dash-sidebar">
+            <div class="sidebar-brand">
+                <div class="logo-circle"><i class="fa-solid fa-briefcase-medical"></i></div>
+                <div class="brand-text">
+                    <strong>Vision</strong>
+                    <span>Partner Portal</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" id="tab-appointments"><i class="fa-solid fa-calendar-check"></i> Requests</a>
+                <a href="#" class="nav-item" id="tab-schedule"><i class="fa-solid fa-clock"></i> Availability</a>
+                <a href="#" class="nav-item" id="tab-records"><i class="fa-solid fa-file-waveform"></i> History</a>
+                <a href="#" class="nav-item" id="tab-earnings"><i class="fa-solid fa-wallet"></i> Earnings</a>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <button id="theme-toggle" class="btn-sidebar-outline w-100 mb-2">
+                    <i class="fa-regular fa-moon" id="theme-icon"></i> Theme
+                </button>
+                <button class="btn-sidebar-outline w-100 text-red" id="btn-logout">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <div class="dash-main">
+            <header class="dash-header">
+                <div>
+                    <h1 id="welcome-message">Loading...</h1>
+                    <p class="text-secondary" id="clinic-name">Fetching your business details...</p>
+                </div>
+                <div class="header-profile" style="display: flex; align-items: center; gap: 16px;">
+                    <div class="provider-avatar-small" id="header-initials">--</div>
+                    <button id="mobile-btn-logout" class="mobile-only-btn" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer;">
+                        <i class="fa-solid fa-right-from-bracket text-red"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="dash-content">
+                
+                <section id="view-appointments">
+                    <div class="stats-grid" id="provider-stats"></div>
+                    <div class="section-title mt-4 mb-3" id="pending-title">Pending Requests</div>
+                    <div class="appointments-list" id="provider-appointments-list"></div>
+                </section>
+
+                <section id="view-schedule" style="display: none;">
+                    <div class="schedule-manager-card">
+                        <div class="card-header">
+                            <h2 style="font-size: 1.25rem; margin-bottom: 8px;">Manage Operating Hours</h2>
+                            <p style="color: var(--text-secondary); font-size: 0.95rem;">Block out times your business is closed or unavailable.</p>
+                        </div>
+                        <div class="mt-4 mb-3" style="font-weight: 600;"><i class="fa-regular fa-calendar"></i> Select Date</div>
+                        <div class="date-scroll-container" id="provider-date-container"></div>
+                        <div class="mt-4 mb-3" style="font-weight: 600; display: flex; justify-content: space-between;">
+                            <span><i class="fa-regular fa-clock"></i> Time Slots</span>
+                        </div>
+                        <div class="time-grid" id="provider-time-container"></div>
+                    </div>
+                </section>
+
+                <section id="view-records" style="display: none;">
+                    <div style="margin-bottom: 24px;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 8px;" id="history-title">Completed Records</h2>
+                        <p style="color: var(--text-secondary);">Access history and uploaded documents securely.</p>
+                    </div>
+                    <div class="record-table-container">
+                        <table class="record-table">
+                            <thead>
+                                <tr>
+                                    <th>Client / Patient</th>
+                                    <th>Date</th>
+                                    <th>Service Type</th>
+                                    <th>Notes / Remarks</th>
+                                    <th>Document</th>
+                                </tr>
+                            </thead>
+                            <tbody id="records-list">
+                                </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="view-earnings" style="display: none;">
+                    <div style="margin-bottom: 24px;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 8px;">Revenue Dashboard</h2>
+                        <p style="color: var(--text-secondary);">Track your earnings from completed orders and consults.</p>
+                    </div>
+                    <div class="stats-grid" id="earnings-stats"></div>
+                    <div class="section-title mt-4 mb-3">Recent Transactions</div>
+                    <div class="appointments-list" id="transactions-list"></div>
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="upload-modal" style="display: none;">
+        <div class="modal-container">
+            <button class="modal-close" id="close-upload-btn"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-header">
+                <h2 id="modal-dynamic-title">Complete Service</h2>
+                <p>Upload service details and final reports</p>
+            </div>
+            <form id="form-upload-record" class="modal-scroll-content">
+                <input type="hidden" id="record-booking-id">
+                <div class="alert-box alert-info mb-3">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <div>
+                        <strong>Client: <span id="record-patient-name">...</span></strong>
+                        <p>ID: <span id="record-display-id">...</span></p>
+                    </div>
+                </div>
+                <div class="input-group mb-3">
+                    <label id="modal-notes-label">Clinical Notes / Remarks *</label>
+                    <textarea id="record-notes" rows="4" required></textarea>
+                </div>
+                <div class="input-group mb-3">
+                    <label id="modal-upload-label">Upload Report / Invoice (Optional)</label>
+                    <div class="file-upload-box" id="report-upload-box">
+                        <i class="fa-solid fa-file-arrow-up"></i>
+                        <span>Attach PDF or Image</span>
+                        <input type="file" id="record-file" accept="image/*,.pdf">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary w-100">Mark Completed</button>
+            </form>
+        </div>
+    </div>
+    <script src="js/auth_guard.js"></script>
+    <script src="js/provider-dash.js"></script>
+</body>
+</html>
