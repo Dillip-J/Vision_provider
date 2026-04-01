@@ -111,6 +111,19 @@ document.addEventListener('DOMContentLoaded', () => {
    // ==========================================
     // --- 5. Registration Logic (REAL API CONNECTED) ---
     // ==========================================
+    // Ensure "Enter" key submits forms explicitly
+    [formLogin, formSignup].forEach(form => {
+        if (!form) return;
+        form.querySelectorAll('input').forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    form.querySelector('button[type="submit"]').click();
+                }
+            });
+        });
+    });
+
     if (formSignup) {
         formSignup.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -154,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!response.ok) {
                     const errorData = await response.json();
                     if (errorData.detail && typeof errorData.detail === 'string' && errorData.detail.toLowerCase().includes('already')) {
-                        alert("Email is already registered");
+                        alert("account already is there on this mail");
                     } else {
                         alert(`Signup Failed: ${errorData.detail}`);
                     }
@@ -168,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             } catch (err) {
                 console.error(err);
-                alert("Could not connect to the server. Is Uvicorn running?");
+                alert("Server connection failed. The server is currently disconnected.");
             } finally {
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
@@ -223,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             } catch (err) {
                 console.error(err);
-                alert("Server is offline. Please start Uvicorn.");
+                alert("Server connection failed. The server is currently disconnected.");
             } finally {
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
