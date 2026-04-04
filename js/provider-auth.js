@@ -1,9 +1,22 @@
+// js/provider-auth.js
+
 document.addEventListener('DOMContentLoaded', () => {
+
+    // ==========================================
+    // --- 0. GLOBAL ROUTING ENGINE ---
+    // ==========================================
+    document.querySelectorAll('[data-nav]').forEach(element => {
+        element.addEventListener('click', (e) => {
+            e.preventDefault(); 
+            const targetPage = element.getAttribute('data-nav');
+            window.location.assign(targetPage);
+        });
+    });
 
     // --- 1. Session Guard ---
     const activeProviderSession = localStorage.getItem('currentProvider');
     if (activeProviderSession) {
-        window.location.href = 'provider-dash.html';
+        window.location.replace('provider-dash.html');
         return; 
     }
 
@@ -105,13 +118,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (typeSelect) {
         typeSelect.addEventListener('change', updateFormUI);
-        updateFormUI(); // Run once to populate default doctor fields
+        updateFormUI(); 
     }
 
    // ==========================================
-    // --- 5. Registration Logic (REAL API CONNECTED) ---
+    // --- 5. Registration Logic (BULLETPROOF) ---
     // ==========================================
-    // Ensure "Enter" key submits forms explicitly
     [formLogin, formSignup].forEach(form => {
         if (!form) return;
         form.querySelectorAll('input').forEach(input => {
@@ -128,22 +140,20 @@ document.addEventListener('DOMContentLoaded', () => {
         formSignup.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // It's safer to get elements by ID or name rather than querySelectorAll indexing
-            // assuming your HTML has these inputs in order: name, email, phone, password, license
-            const inputs = formSignup.querySelectorAll('input');
-            const name = inputs[0].value;
-            const email = inputs[1].value.toLowerCase();
-            const phone = inputs[2].value;
-            const password = inputs[3].value;
-            const license = inputs[4].value; // Depending on your HTML, this might be index 4
+            // 🚨 SECURITY FIX: Targeting by ID, not by Array Index!
+            // Note: Make sure your HTML inputs actually have these ID attributes!
+            const name = document.getElementById('dynamic-name-input').value;
+            const email = document.getElementById('provider-signup-email').value.toLowerCase();
+            const phone = document.getElementById('provider-signup-phone').value;
+            const password = document.getElementById('provider-signup-password').value;
+            const license = document.getElementById('dynamic-license-input').value; 
 
             const providerData = {
                 name: name,
                 email: email,
                 password: password,
                 phone: phone,
-                provider_type: typeSelect.value, // 'Doctor', 'Pharmacy', 'Lab'
-                // Optional fields your backend accepts
+                provider_type: typeSelect.value, 
                 address: "", 
                 latitude: null,
                 longitude: null,
@@ -157,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
 
             try {
-                // Hit the FastAPI Backend
+                // Config.js provides API_BASE globally!
                 const response = await fetch(`${API_BASE}/providers/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -167,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!response.ok) {
                     const errorData = await response.json();
                     if (errorData.detail && typeof errorData.detail === 'string' && errorData.detail.toLowerCase().includes('already')) {
-                        alert("account already is there on this mail");
+                        alert("Account already exists on this email.");
                     } else {
                         alert(`Signup Failed: ${errorData.detail}`);
                     }
@@ -195,9 +205,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (formLogin) {
         formLogin.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const inputs = formLogin.querySelectorAll('input');
-            const loginEmail = inputs[0].value.toLowerCase();
-            const loginPassword = inputs[1].value;
+            
+            // 🚨 SECURITY FIX: Targeting by ID!
+            const loginEmail = document.getElementById('provider-login-email').value.toLowerCase();
+            const loginPassword = document.getElementById('provider-login-password').value;
 
             const submitBtn = formLogin.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
@@ -205,7 +216,6 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
 
             try {
-                // Hit the FastAPI Provider Login Route
                 const response = await fetch(`${API_BASE}/providers/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -229,10 +239,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // SECURITY: Save the Provider JWT Token!
                 localStorage.setItem('access_token', data.access_token);
-                // Save basic provider info for the dashboard UI
                 localStorage.setItem('currentProvider', JSON.stringify(data.provider));
 
-                window.location.href = 'provider-dash.html';
+                window.location.replace('provider-dash.html');
 
             } catch (err) {
                 console.error(err);

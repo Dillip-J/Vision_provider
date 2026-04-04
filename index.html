@@ -35,12 +35,12 @@
 
                 <div class="input-group">
                     <label>Registered Email</label>
-                    <input type="email" placeholder="contact@business.com" required>
+                    <input type="email" id="provider-login-email" placeholder="contact@business.com" required>
                 </div>
 
                 <div class="input-group">
                     <label>Password</label>
-                    <input type="password" placeholder="••••••••" required>
+                    <input type="password" id="provider-login-password" placeholder="••••••••" required>
                 </div>
 
                 <button type="submit" class="btn-primary">Login to Portal</button>
@@ -68,7 +68,12 @@
                 
                 <div class="input-group">
                     <label>Professional / Business Email *</label>
-                    <input type="email" placeholder="contact@business.com" required>
+                    <input type="email" id="provider-signup-email" placeholder="contact@business.com" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Phone Number *</label>
+                    <input type="tel" id="provider-signup-phone" placeholder="e.g. 9876543210" required>
                 </div>
 
                 <div class="input-group">
@@ -84,7 +89,7 @@
 
                 <div class="input-group">
                     <label>Password *</label>
-                    <input type="password" placeholder="••••••••" required>
+                    <input type="password" id="provider-signup-password" placeholder="••••••••" required>
                 </div>
 
                 <div class="input-group file-upload-box">
@@ -99,9 +104,11 @@
         </div>
         
         <div style="text-align: center; margin-top: 20px;">
-            <a href="home.html" style="color: var(--text-muted); font-size: 0.9rem; text-decoration: none;"><i class="fa-solid fa-arrow-left"></i> Back to Patient Site</a>
+            <a href="#" data-nav="index.html" style="color: var(--text-muted); font-size: 0.9rem; text-decoration: none;"><i class="fa-solid fa-arrow-left"></i> Back to Patient Site</a>
         </div>
     </div>
+    
+    <script src="js/config.js"></script>
     <script src="js/auth_guard.js"></script>
     <script src="js/provider-auth.js"></script>
 </body>
