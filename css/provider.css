@@ -171,6 +171,7 @@ h2 { font-size: 1.6rem; margin-bottom: 8px; }
 .input-group input[type="text"], 
 .input-group input[type="email"], 
 .input-group input[type="password"],
+.input-group input[type="tel"],
 .input-group select {
     width: 100%; 
     padding: 14px 16px; 
@@ -181,7 +182,7 @@ h2 { font-size: 1.6rem; margin-bottom: 8px; }
     font-size: 0.95rem; 
     outline: none;
     font-family: inherit;
-    appearance: none; /* Cleans up default select styles */
+    appearance: none;
 }
 
 /* Custom dropdown arrow for selects */
@@ -222,10 +223,18 @@ h2 { font-size: 1.6rem; margin-bottom: 8px; }
     margin-bottom: 12px; 
 }
 
-.file-upload-box span { 
+.upload-title {
     font-size: 0.9rem; 
     color: var(--text-main); 
     display: block; 
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.upload-subtitle {
+    font-size: 0.75rem; 
+    color: var(--text-muted); 
+    margin-bottom: 8px;
 }
 
 .file-upload-box input[type="file"] { 
@@ -253,6 +262,12 @@ h2 { font-size: 1.6rem; margin-bottom: 8px; }
     box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
 }
 
+.mt-4 { margin-top: 16px; }
+
+.back-link-container { text-align: center; margin-top: 20px; }
+.back-link { color: var(--text-muted); font-size: 0.9rem; text-decoration: none; }
+.back-link:hover { color: var(--text-main); }
+
 /* ========================================= */
 /* --- Animations & Mobile Queries ---       */
 /* ========================================= */
@@ -261,7 +276,6 @@ h2 { font-size: 1.6rem; margin-bottom: 8px; }
     to { opacity: 1; transform: translateY(0); } 
 }
 
-/* Mobile Adjustments */
 @media (max-width: 480px) {
     .auth-card { 
         padding: 32px 20px; 

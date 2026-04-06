@@ -32,11 +32,14 @@ body.bg-main {
     margin: 0;
     padding: 0;
     overflow: hidden; /* Prevents double scrollbars */
+    display: block; /* Overrides the auth flex center */
 }
 
 h1, h2, h3, h4, h5, h6 { color: var(--text-primary); margin-top: 0; }
 p, span, label { color: var(--text-secondary); }
 strong { color: var(--text-primary); }
+
+.hidden { display: none !important; }
 
 /* --- Professional Dashboard Layout --- */
 .dash-wrapper {
@@ -68,12 +71,14 @@ strong { color: var(--text-primary); }
     border-bottom: 1px solid var(--border-color);
 }
 
-.logo-circle {
+.sidebar-brand .logo-circle {
     width: 36px; height: 36px;
     background-color: var(--brand-blue);
     color: white; border-radius: 50%;
     display: flex; justify-content: center; align-items: center;
     font-size: 1.1rem;
+    box-shadow: none;
+    margin: 0;
 }
 
 .brand-text strong { display: block; color: var(--text-primary); font-size: 1.1rem; line-height: 1.2; }
@@ -130,6 +135,9 @@ strong { color: var(--text-primary); }
 .mb-2 { margin-bottom: 8px; }
 .mt-4 { margin-top: 24px; }
 .mb-3 { margin-bottom: 16px; }
+.mb-4 { margin-bottom: 24px; }
+.fw-bold { font-weight: 600; }
+.flex-between { display: flex; justify-content: space-between; }
 
 /* ========================================= */
 /* --- Main Content Area ---                 */
@@ -152,6 +160,11 @@ strong { color: var(--text-primary); }
 }
 
 .dash-header h1 { font-size: 1.5rem; color: var(--text-primary); margin-bottom: 4px;}
+
+.header-profile {
+    display: flex; align-items: center; gap: 16px;
+}
+
 .provider-avatar-small {
     width: 48px; height: 48px;
     background-color: var(--brand-blue);
@@ -169,11 +182,21 @@ strong { color: var(--text-primary); }
 .dash-content::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
 
 /* Mobile Only Logout Button (Hidden on Desktop) */
-.mobile-only-btn { display: none; }
+.mobile-only-btn { 
+    display: none; 
+    background: transparent; 
+    border: none; 
+    font-size: 1.2rem; 
+    cursor: pointer;
+}
 
 /* ========================================= */
 /* --- Dashboard Views & Components ---      */
 /* ========================================= */
+
+.view-section {
+    animation: fadeIn 0.4s ease;
+}
 
 /* Stats Grid */
 .stats-grid {
@@ -315,15 +338,9 @@ strong { color: var(--text-primary); }
 .alert-info strong { color: var(--brand-blue); display: block; margin-bottom: 2px; }
 .alert-info p { color: var(--brand-blue); margin: 0; opacity: 0.8; }
 
-.input-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; font-weight: 500; color: var(--text-primary); }
-.input-group textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--page-bg); color: var(--text-primary); font-family: inherit; resize: vertical; outline: none; }
-.input-group textarea:focus { border-color: var(--brand-blue); }
-
-.file-upload-box { border: 2px dashed var(--border-color); padding: 24px; text-align: center; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: var(--page-bg); }
-.file-upload-box:hover { border-color: var(--brand-blue); background: var(--exp-bg); }
-.file-upload-box i { font-size: 2rem; color: var(--brand-blue); margin-bottom: 8px; display: block; }
-.btn-primary { width: 100%; padding: 14px; background: var(--brand-blue); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; }
-.btn-primary:hover { opacity: 0.9; }
+.modal-container .input-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; font-weight: 500; color: var(--text-primary); }
+.modal-container .input-group textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--page-bg); color: var(--text-primary); font-family: inherit; resize: vertical; outline: none; }
+.modal-container .input-group textarea:focus { border-color: var(--brand-blue); }
 
 /* ========================================= */
 /* --- Mobile Responsive Media Queries ---   */
