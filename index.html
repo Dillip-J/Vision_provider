@@ -72,7 +72,7 @@
                 </div>
 
                 <div class="input-group">
-                    <label>Phone Number *</label>
+                    <label>Contact Number *</label>
                     <input type="tel" id="provider-signup-phone" placeholder="e.g. 9876543210" required>
                 </div>
 
@@ -94,22 +94,22 @@
 
                 <div class="input-group file-upload-box">
                     <i class="fa-solid fa-file-arrow-up"></i>
-                    <span id="dynamic-upload-label" style="display:block; margin-bottom:4px; font-weight: 500;">Upload License (PDF)</span>
-                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">Required for Admin Verification</p>
-                    <input type="file" accept=".pdf" required style="font-size: 0.8rem;">
+                    <span id="dynamic-upload-label" class="upload-title">Upload License (PDF)</span>
+                    <p class="upload-subtitle">Required for Admin Verification</p>
+                    <input type="file" id="provider-signup-license-file" accept=".pdf" required>
                 </div>
 
-                <button type="submit" class="btn-primary" style="margin-top: 16px;">Submit Application</button>
+                <button type="submit" class="btn-primary mt-4">Submit Application</button>
             </form>
         </div>
         
-        <div style="text-align: center; margin-top: 20px;">
-            <a href="#" data-nav="index.html" style="color: var(--text-muted); font-size: 0.9rem; text-decoration: none;"><i class="fa-solid fa-arrow-left"></i> Back to Patient Site</a>
+        <div class="back-link-container">
+            <a href="home.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Patient Site</a>
         </div>
     </div>
     
     <script src="js/config.js"></script>
-    <script src="js/auth-guard.js"></script>
+    <script src="js/auth_guard.js"></script>
     <script src="js/provider-auth.js"></script>
 </body>
 </html>

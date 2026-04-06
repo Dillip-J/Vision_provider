@@ -44,9 +44,9 @@
                     <h1 id="welcome-message">Loading...</h1>
                     <p class="text-secondary" id="clinic-name">Fetching your business details...</p>
                 </div>
-                <div class="header-profile" style="display: flex; align-items: center; gap: 16px;">
+                <div class="header-profile">
                     <div class="provider-avatar-small" id="header-initials">--</div>
-                    <button id="mobile-btn-logout" class="mobile-only-btn" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer;">
+                    <button id="mobile-btn-logout" class="mobile-only-btn">
                         <i class="fa-solid fa-right-from-bracket text-red"></i>
                     </button>
                 </div>
@@ -54,31 +54,31 @@
 
             <div class="dash-content">
                 
-                <section id="view-appointments">
+                <section id="view-appointments" class="view-section">
                     <div class="stats-grid" id="provider-stats"></div>
                     <div class="section-title mt-4 mb-3" id="pending-title">Pending Requests</div>
                     <div class="appointments-list" id="provider-appointments-list"></div>
                 </section>
 
-                <section id="view-schedule" style="display: none;">
+                <section id="view-schedule" class="view-section hidden">
                     <div class="schedule-manager-card">
                         <div class="card-header">
-                            <h2 style="font-size: 1.25rem; margin-bottom: 8px;">Manage Operating Hours</h2>
-                            <p style="color: var(--text-secondary); font-size: 0.95rem;">Block out times your business is closed or unavailable.</p>
+                            <h2 class="card-title">Manage Operating Hours</h2>
+                            <p class="card-subtitle">Block out times your business is closed or unavailable.</p>
                         </div>
-                        <div class="mt-4 mb-3" style="font-weight: 600;"><i class="fa-regular fa-calendar"></i> Select Date</div>
+                        <div class="mt-4 mb-3 fw-bold"><i class="fa-regular fa-calendar"></i> Select Date</div>
                         <div class="date-scroll-container" id="provider-date-container"></div>
-                        <div class="mt-4 mb-3" style="font-weight: 600; display: flex; justify-content: space-between;">
+                        <div class="mt-4 mb-3 fw-bold flex-between">
                             <span><i class="fa-regular fa-clock"></i> Time Slots</span>
                         </div>
                         <div class="time-grid" id="provider-time-container"></div>
                     </div>
                 </section>
 
-                <section id="view-records" style="display: none;">
-                    <div style="margin-bottom: 24px;">
-                        <h2 style="font-size: 1.5rem; margin-bottom: 8px;" id="history-title">Completed Records</h2>
-                        <p style="color: var(--text-secondary);">Access history and uploaded documents securely.</p>
+                <section id="view-records" class="view-section hidden">
+                    <div class="section-header mb-4">
+                        <h2 class="section-title" id="history-title">Completed Records</h2>
+                        <p class="text-secondary">Access history and uploaded documents securely.</p>
                     </div>
                     <div class="record-table-container">
                         <table class="record-table">
@@ -97,10 +97,10 @@
                     </div>
                 </section>
 
-                <section id="view-earnings" style="display: none;">
-                    <div style="margin-bottom: 24px;">
-                        <h2 style="font-size: 1.5rem; margin-bottom: 8px;">Revenue Dashboard</h2>
-                        <p style="color: var(--text-secondary);">Track your earnings from completed orders and consults.</p>
+                <section id="view-earnings" class="view-section hidden">
+                    <div class="section-header mb-4">
+                        <h2 class="section-title">Revenue Dashboard</h2>
+                        <p class="text-secondary">Track your earnings from completed orders and consults.</p>
                     </div>
                     <div class="stats-grid" id="earnings-stats"></div>
                     <div class="section-title mt-4 mb-3">Recent Transactions</div>
@@ -111,7 +111,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="upload-modal" style="display: none;">
+    <div class="modal-overlay hidden" id="upload-modal">
         <div class="modal-container">
             <button class="modal-close" id="close-upload-btn"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-header">
@@ -143,6 +143,7 @@
             </form>
         </div>
     </div>
+    
     <script src="js/config.js"></script>
     <script src="js/auth_guard.js"></script>
     <script src="js/provider-dash.js"></script>
