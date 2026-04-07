@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentProviderString = localStorage.getItem('currentProvider'); // Stored during login
 
     if (!token || !currentProviderString) { 
-        window.location.href = 'provider-auth.html'; 
+        window.location.href = 'index.html'; // 🚨 FIXED
         return; 
     }
 
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
         localStorage.removeItem('currentProvider');
         localStorage.removeItem('access_token');
-        window.location.href = 'provider-auth.html';
+        window.location.href = 'index.html'; // 🚨 FIXED
         return;
     }
 
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(response.status === 401) {
                     alert("Session expired. Please log in again.");
                     localStorage.removeItem('access_token');
-                    window.location.href = 'provider-auth.html';
+                    window.location.href = 'index.html'; // 🚨 FIXED
                 }
                 throw new Error("Failed to fetch dashboard data");
             }
@@ -438,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append("file", photoInput); // MUST be named "file" for FastAPI UploadFile
 
             try {
-                // FIXED: Hit the correct secure endpoint
+                // Hit the correct secure endpoint
                 const response = await fetch(`${API_BASE}/files/provider/profile-photo`, {
                     method: "POST",
                     headers: { 'Authorization': `Bearer ${token}` }, // JWT Token attached!
@@ -480,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (query.length < 2) return;
 
             try {
-                // FIXED: Removed provider_id from URL (Security IDOR fix)
+                // Removed provider_id from URL (Security IDOR fix)
                 const response = await fetch(`${API_BASE}/providers/search-my-records?q=${query}`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -502,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         localStorage.removeItem('currentProvider');
         localStorage.removeItem('access_token');
-        window.location.href = 'provider-auth.html';
+        window.location.href = 'index.html'; // 🚨 FIXED
     };
 
     const logoutBtn = document.getElementById('btn-logout');
