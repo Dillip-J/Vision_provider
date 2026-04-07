@@ -140,38 +140,36 @@ document.addEventListener('DOMContentLoaded', () => {
         formSignup.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // 🚨 SECURITY FIX: Targeting by ID, not by Array Index!
-            // Note: Make sure your HTML inputs actually have these ID attributes!
-            const name = document.getElementById('dynamic-name-input').value;
-            const email = document.getElementById('provider-signup-email').value.toLowerCase();
-            const phone = document.getElementById('provider-signup-phone').value;
-            const password = document.getElementById('provider-signup-password').value;
-            const license = document.getElementById('dynamic-license-input').value; 
-
-            const providerData = {
-                name: name,
-                email: email,
-                password: password,
-                phone: phone,
-                provider_type: typeSelect.value, 
-                address: "", 
-                latitude: null,
-                longitude: null,
-                profile_photo_url: null,
-                license_document_url: null
-            };
-
             const submitBtn = formSignup.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
             submitBtn.textContent = "Submitting...";
             submitBtn.disabled = true;
 
             try {
-                // Config.js provides API_BASE globally!
+                // 🚨 THE FIX: Create a FormData object to hold text AND the file
+                const formData = new FormData();
+                
+                // Append all the text fields
+                formData.append("name", document.getElementById('dynamic-name-input').value);
+                formData.append("email", document.getElementById('provider-signup-email').value.toLowerCase());
+                formData.append("phone", document.getElementById('provider-signup-phone').value);
+                formData.append("password", document.getElementById('provider-signup-password').value);
+                formData.append("provider_type", typeSelect.value); 
+                formData.append("license_number", document.getElementById('dynamic-license-input').value);
+                formData.append("category", document.getElementById('dynamic-category-select').value);
+
+                // 🚨 GRAB THE FILE! 
+                // Check your HTML! Make sure your <input type="file"> has id="license-upload"
+                const fileInput = document.getElementById('license-upload');
+                if (fileInput && fileInput.files.length > 0) {
+                    formData.append("license_document", fileInput.files[0]);
+                }
+
                 const response = await fetch(`${API_BASE}/providers/register`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(providerData)
+                    // 🚨 DO NOT ADD 'Content-Type' headers here! 
+                    // The browser will automatically set 'multipart/form-data' when using FormData.
+                    body: formData
                 });
 
                 if (!response.ok) {
