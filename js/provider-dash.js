@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentProviderString = localStorage.getItem('currentProvider'); // Stored during login
 
     if (!token || !currentProviderString) { 
-        window.location.href = 'index.html'; // 🚨 FIXED
+        window.location.href = 'index.html'; 
         return; 
     }
 
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
         localStorage.removeItem('currentProvider');
         localStorage.removeItem('access_token');
-        window.location.href = 'index.html'; // 🚨 FIXED
+        window.location.href = 'index.html'; 
         return;
     }
 
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(response.status === 401) {
                     alert("Session expired. Please log in again.");
                     localStorage.removeItem('access_token');
-                    window.location.href = 'index.html'; // 🚨 FIXED
+                    window.location.href = 'index.html'; 
                 }
                 throw new Error("Failed to fetch dashboard data");
             }
@@ -331,7 +331,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!tbody) return;
         tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Loading...</td></tr>';
 
-        // FIXED: Replaced non-existent fetchMyBookings with dashboard items
         const dashboardData = await fetchMyDashboard();
         const completedBookings = (dashboardData.items || []).filter(b => b.status === 'completed' || b.status === 'canceled');
 
@@ -342,7 +341,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tbody.innerHTML = '';
         completedBookings.forEach(apt => {
-            // Note: In a full app, you would fetch the actual medical_records table here
             const btnClass = 'btn-download disabled';
             const btnText = `No File`;
             
@@ -368,7 +366,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!txList) return;
         txList.innerHTML = '<div style="text-align:center;">Calculating earnings...</div>';
 
-        // FIXED: Replaced non-existent fetchMyBookings
         const dashboardData = await fetchMyDashboard();
         const completedBookings = (dashboardData.items || []).filter(b => b.status === 'completed');
         
@@ -400,16 +397,75 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // --- 10. SCHEDULE MANAGER ---
+    // --- 10. SCHEDULE MANAGER (PURE JS INJECTION) ---
     // ==========================================
     async function loadScheduleManager() {
         if (providerType === 'Pharmacy') return; 
 
+        // Target your existing HTML containers
         const dateContainer = document.getElementById('provider-date-container');
         const timeContainer = document.getElementById('provider-time-container');
         if(!dateContainer || !timeContainer) return;
 
-        timeContainer.innerHTML = '<div style="padding: 20px;">Schedule Management is loading...</div>';
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const standardTimes = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
+
+        // 1. Inject Dynamic CSS (So you don't have to edit your CSS files)
+        if(!document.getElementById('dynamic-schedule-styles')) {
+            const style = document.createElement('style');
+            style.id = 'dynamic-schedule-styles';
+            style.innerHTML = `
+                .date-scroll-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
+                .btn-day-select { flex: 0 0 auto; padding: 10px 20px; border: 1px solid var(--border-color, #ccc); background: transparent; color: var(--text-primary, #fff); border-radius: 8px; cursor: pointer; white-space: nowrap; transition: 0.2s; font-family: 'Inter', sans-serif;}
+                .btn-day-select.active-day { background: rgba(59, 130, 246, 0.1); border-color: var(--primary-color, #3b82f6); color: var(--primary-color, #3b82f6); font-weight: bold; }
+                .time-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px; }
+                .btn-time-slot { padding: 12px; border: 1px solid var(--border-color, #ccc); background: transparent; color: var(--text-primary, #fff); border-radius: 8px; cursor: pointer; transition: 0.2s; text-align: center; font-family: 'Inter', sans-serif;}
+                .btn-time-slot.selected-slot { background: var(--primary-color, #3b82f6); color: white; border-color: var(--primary-color, #3b82f6); }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // 2. Render Day Buttons
+        dateContainer.innerHTML = days.map(day => 
+            `<button class="btn-day-select" data-day="${day}">${day}</button>`
+        ).join('');
+
+        // 3. Render Times Engine (Runs when a day is clicked)
+        const renderTimes = (day) => {
+            timeContainer.innerHTML = standardTimes.map(time => 
+                `<button class="btn-time-slot" onclick="this.classList.toggle('selected-slot')">${time}</button>`
+            ).join('');
+
+            // Dynamically create the Save Button below the grid if it doesn't exist
+            let saveBtnContainer = document.getElementById('save-schedule-container');
+            if (!saveBtnContainer) {
+                saveBtnContainer = document.createElement('div');
+                saveBtnContainer.id = 'save-schedule-container';
+                saveBtnContainer.style.marginTop = '20px';
+                saveBtnContainer.innerHTML = `<button id="btn-save-schedule" class="btn-primary w-100" style="padding: 12px; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-floppy-disk"></i> Save Availability</button>`;
+                timeContainer.parentElement.appendChild(saveBtnContainer);
+
+                // Add the save logic
+                document.getElementById('btn-save-schedule').onclick = () => {
+                    const activeDay = document.querySelector('.btn-day-select.active-day').getAttribute('data-day');
+                    const selectedSlots = Array.from(document.querySelectorAll('.selected-slot')).map(btn => btn.textContent.trim());
+                    alert(`Saved ${selectedSlots.length} slots for ${activeDay}!\n(Backend Database hook required for Phase 2)`);
+                };
+            }
+        };
+
+        // 4. Attach Click Listeners to Days
+        const dayBtns = dateContainer.querySelectorAll('.btn-day-select');
+        dayBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                dayBtns.forEach(b => b.classList.remove('active-day'));
+                e.currentTarget.classList.add('active-day');
+                renderTimes(e.currentTarget.getAttribute('data-day'));
+            });
+        });
+
+        // 5. Auto-click the first day to initialize the view
+        if(dayBtns.length > 0) dayBtns[0].click();
     }
 
     // ==========================================
@@ -435,24 +491,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const formData = new FormData();
-            formData.append("file", photoInput); // MUST be named "file" for FastAPI UploadFile
+            formData.append("file", photoInput); 
 
             try {
-                // Hit the correct secure endpoint
                 const response = await fetch(`${API_BASE}/files/provider/profile-photo`, {
                     method: "POST",
-                    headers: { 'Authorization': `Bearer ${token}` }, // JWT Token attached!
+                    headers: { 'Authorization': `Bearer ${token}` },
                     body: formData 
                 });
 
                 if (response.ok) {
                     const data = await response.json();
                     alert("Documents uploaded successfully!");
-                    // Update UI immediately
                     const profileImgElement = document.getElementById("provider-profile-img");
                     if (profileImgElement) profileImgElement.src = `${API_BASE}${data.url}`;
                     
-                    // Update local storage so it persists on refresh
                     currentProvider.profile_photo_url = data.url;
                     localStorage.setItem('currentProvider', JSON.stringify(currentProvider));
 
@@ -480,7 +533,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (query.length < 2) return;
 
             try {
-                // Removed provider_id from URL (Security IDOR fix)
                 const response = await fetch(`${API_BASE}/providers/search-my-records?q=${query}`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -502,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         localStorage.removeItem('currentProvider');
         localStorage.removeItem('access_token');
-        window.location.href = 'index.html'; // 🚨 FIXED
+        window.location.href = 'index.html'; 
     };
 
     const logoutBtn = document.getElementById('btn-logout');
