@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. BULLETPROOF JWT AUTH GUARD ---
     // ==========================================
     const token = localStorage.getItem('access_token');
-    const currentProviderString = localStorage.getItem('currentProvider'); // Stored during login
+    const currentProviderString = localStorage.getItem('currentProvider'); 
 
     if (!token || !currentProviderString) { 
         window.location.href = 'index.html'; 
@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const providerType = currentProvider.type || "Doctor"; 
 
     // --- INITIALIZE DASHBOARD ---
-    // We update the profile photo immediately from local storage if available
     const profileImgElement = document.getElementById("provider-profile-img");
     if (profileImgElement && currentProvider.profile_photo_url) {
         profileImgElement.src = `${API_BASE}${currentProvider.profile_photo_url}`;
@@ -51,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
         initialsEl.textContent = parts.length > 1 ? `${parts[0][0]}${parts[1][0]}`.toUpperCase() : `${parts[0][0]}X`.toUpperCase();
     }
 
-    // --- Transform Tab Names based on Business Type ---
     const tabApt = document.getElementById('tab-appointments');
     const tabRec = document.getElementById('tab-records');
     const tabSched = document.getElementById('tab-schedule');
@@ -65,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(tabApt) tabApt.innerHTML = '<i class="fa-solid fa-pills"></i> Medicine Orders';
         if(tabRec) tabRec.innerHTML = '<i class="fa-solid fa-receipt"></i> Delivery History';
         if(pendingTitle) pendingTitle.textContent = "Pending Medicine Deliveries";
-        if(tabSched) tabSched.style.display = 'none'; // Pharmacies don't need hourly slots
+        if(tabSched) tabSched.style.display = 'none'; 
     } else {
         if(tabApt) tabApt.innerHTML = '<i class="fa-solid fa-calendar-check"></i> Patient Consults';
     }
@@ -194,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const clientLabel = apt.client_name || "Patient";
             const shortId = apt.booking_id ? apt.booking_id.split('-')[0] : "N/A"; 
             
-            // ONLINE CONNECTION LOGIC
             const isOnline = apt.service_name.toLowerCase().includes('video') || 
                              apt.service_name.toLowerCase().includes('online') ||
                              apt.address === "Not Provided" || apt.address === null; 
@@ -291,7 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const submitBtn = uploadForm.querySelector('button[type="submit"]');
             if (submitBtn) { submitBtn.textContent = "Processing..."; submitBtn.disabled = true; }
 
-            // 1. First API Call: Upload Document (if exists)
             let uploadedFileUrl = null;
             try {
                 if (fileInput) {
@@ -300,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     const uploadRes = await fetch(`${API_BASE}/files/medical-report/${bookingId}`, {
                         method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}` }, // NO Content-Type for FormData
+                        headers: { 'Authorization': `Bearer ${token}` }, 
                         body: formData
                     });
                     
@@ -369,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const dashboardData = await fetchMyDashboard();
         const completedBookings = (dashboardData.items || []).filter(b => b.status === 'completed');
         
-        let totalEarnings = completedBookings.length * 500; // Mock calculation since booking list doesn't return raw price yet
+        let totalEarnings = completedBookings.length * 500; 
 
         const formattedTotal = new Intl.NumberFormat('en-IN', {
             minimumFractionDigits: 2, maximumFractionDigits: 2
@@ -397,12 +393,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // --- 10. SCHEDULE MANAGER (PURE JS INJECTION) ---
+    // --- 10. SCHEDULE MANAGER (REAL API CONNECTED) ---
     // ==========================================
     async function loadScheduleManager() {
         if (providerType === 'Pharmacy') return; 
 
-        // Target your existing HTML containers
         const dateContainer = document.getElementById('provider-date-container');
         const timeContainer = document.getElementById('provider-time-container');
         if(!dateContainer || !timeContainer) return;
@@ -410,7 +405,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         const standardTimes = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
 
-        // 1. Inject Dynamic CSS (So you don't have to edit your CSS files)
         if(!document.getElementById('dynamic-schedule-styles')) {
             const style = document.createElement('style');
             style.id = 'dynamic-schedule-styles';
@@ -425,18 +419,17 @@ document.addEventListener('DOMContentLoaded', () => {
             document.head.appendChild(style);
         }
 
-        // 2. Render Day Buttons
-        dateContainer.innerHTML = days.map(day => 
-            `<button class="btn-day-select" data-day="${day}">${day}</button>`
-        ).join('');
+        dateContainer.innerHTML = days.map(day => `<button class="btn-day-select" data-day="${day}">${day}</button>`).join('');
 
-        // 3. Render Times Engine (Runs when a day is clicked)
-        const renderTimes = (day) => {
+        const renderTimes = async (day) => {
+            timeContainer.innerHTML = '<div style="grid-column: 1 / -1; padding: 20px;">Fetching slots...</div>';
+            
+            // Note: In Phase 2, you would fetch existing slots from the backend here to pre-select them.
+            // For now, we render the grid blank so they can select and save.
             timeContainer.innerHTML = standardTimes.map(time => 
                 `<button class="btn-time-slot" onclick="this.classList.toggle('selected-slot')">${time}</button>`
             ).join('');
 
-            // Dynamically create the Save Button below the grid if it doesn't exist
             let saveBtnContainer = document.getElementById('save-schedule-container');
             if (!saveBtnContainer) {
                 saveBtnContainer = document.createElement('div');
@@ -445,16 +438,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 saveBtnContainer.innerHTML = `<button id="btn-save-schedule" class="btn-primary w-100" style="padding: 12px; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-floppy-disk"></i> Save Availability</button>`;
                 timeContainer.parentElement.appendChild(saveBtnContainer);
 
-                // Add the save logic
-                document.getElementById('btn-save-schedule').onclick = () => {
+                // --- REAL API SAVE LOGIC ---
+                document.getElementById('btn-save-schedule').onclick = async () => {
                     const activeDay = document.querySelector('.btn-day-select.active-day').getAttribute('data-day');
                     const selectedSlots = Array.from(document.querySelectorAll('.selected-slot')).map(btn => btn.textContent.trim());
-                    alert(`Saved ${selectedSlots.length} slots for ${activeDay}!\n(Backend Database hook required for Phase 2)`);
+                    
+                    const saveBtn = document.getElementById('btn-save-schedule');
+                    const originalText = saveBtn.innerHTML;
+                    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+                    saveBtn.disabled = true;
+
+                    try {
+                        const response = await fetch(`${API_BASE}/providers/schedule`, {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}` 
+                            },
+                            body: JSON.stringify({ day: activeDay, slots: selectedSlots })
+                        });
+
+                        if (!response.ok) throw new Error("Failed to save schedule");
+                        alert(`Successfully saved ${selectedSlots.length} slots for ${activeDay}!`);
+                    } catch (error) {
+                        console.error(error);
+                        alert("Error saving schedule to the server.");
+                    } finally {
+                        saveBtn.innerHTML = originalText;
+                        saveBtn.disabled = false;
+                    }
                 };
             }
         };
 
-        // 4. Attach Click Listeners to Days
         const dayBtns = dateContainer.querySelectorAll('.btn-day-select');
         dayBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -464,7 +480,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // 5. Auto-click the first day to initialize the view
         if(dayBtns.length > 0) dayBtns[0].click();
     }
 

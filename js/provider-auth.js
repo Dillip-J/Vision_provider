@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
    // ==========================================
-    // --- 5. Registration Logic (BULLETPROOF) ---
+    // --- 5. Registration Logic (WITH GPS CAPTURE) ---
     // ==========================================
     [formLogin, formSignup].forEach(form => {
         if (!form) return;
@@ -142,14 +142,34 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const submitBtn = formSignup.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
-            submitBtn.textContent = "Submitting...";
+            submitBtn.textContent = "Fetching Location & Submitting...";
             submitBtn.disabled = true;
 
+            // --- THE GPS PROMPT ---
+            // We wrap geolocation in a Promise so we can await it before sending data to the server
+            const getProviderLocation = () => {
+                return new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        resolve({ lat: null, lon: null }); // Browser doesn't support it
+                    } else {
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => resolve({ 
+                                lat: position.coords.latitude, 
+                                lon: position.coords.longitude 
+                            }),
+                            (error) => resolve({ lat: null, lon: null }), // User blocked it, fail gracefully
+                            { timeout: 10000 } // Give up after 10 seconds
+                        );
+                    }
+                });
+            };
+
             try {
-                // 🚨 THE FIX: Create a FormData object to hold text AND the file
+                // Wait for the user to click "Allow" or "Block"
+                const gps = await getProviderLocation();
+
                 const formData = new FormData();
                 
-                // Append all the text fields
                 formData.append("name", document.getElementById('dynamic-name-input').value);
                 formData.append("email", document.getElementById('provider-signup-email').value.toLowerCase());
                 formData.append("phone", document.getElementById('provider-signup-phone').value);
@@ -158,8 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append("license_number", document.getElementById('dynamic-license-input').value);
                 formData.append("category", document.getElementById('dynamic-category-select').value);
 
-                // 🚨 GRAB THE FILE! 
-                // Check your HTML! Make sure your <input type="file"> has id="license-upload"
+                // 🚨 Inject GPS coordinates if the user allowed it!
+                if (gps.lat && gps.lon) {
+                    formData.append("latitude", gps.lat);
+                    formData.append("longitude", gps.lon);
+                }
+
                 const fileInput = document.getElementById('license-upload');
                 if (fileInput && fileInput.files.length > 0) {
                     formData.append("license_document", fileInput.files[0]);
@@ -167,8 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const response = await fetch(`${API_BASE}/providers/register`, {
                     method: 'POST',
-                    // 🚨 DO NOT ADD 'Content-Type' headers here! 
-                    // The browser will automatically set 'multipart/form-data' when using FormData.
                     body: formData
                 });
 
@@ -182,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                alert(`Success! Your ${typeSelect.value} application has been sent to the Admin for verification.`);
+                alert(`Success! Your application has been sent to the Admin for verification.`);
                 switchTab(true); 
                 formSignup.reset();
                 updateFormUI();
@@ -198,13 +220,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // --- 6. Login Logic (REAL API CONNECTED) ---
+    // --- 6. Login Logic ---
     // ==========================================
     if (formLogin) {
         formLogin.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // 🚨 SECURITY FIX: Targeting by ID!
             const loginEmail = document.getElementById('provider-login-email').value.toLowerCase();
             const loginPassword = document.getElementById('provider-login-password').value;
 
@@ -235,7 +256,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const data = await response.json();
 
-                // SECURITY: Save the Provider JWT Token!
                 localStorage.setItem('access_token', data.access_token);
                 localStorage.setItem('currentProvider', JSON.stringify(data.provider));
 

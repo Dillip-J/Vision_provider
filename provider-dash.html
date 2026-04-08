@@ -55,10 +55,20 @@
             <div class="dash-content">
                 
                 <section id="view-appointments" class="view-section">
-                    <div class="stats-grid" id="provider-stats"></div>
-                    <div class="section-title mt-4 mb-3" id="pending-title">Pending Requests</div>
-                    <div class="appointments-list" id="provider-appointments-list"></div>
-                </section>
+            <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+            <h3 style="margin: 0; font-size: 1rem;"><i class="fa-solid fa-location-crosshairs text-blue"></i> Clinic GPS</h3>
+            <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">Sync your current location to provide accurate ETAs to patients.</p>
+        </div>
+        <button id="btn-update-clinic-loc" class="btn-outline" style="padding: 8px 16px;">
+            Update Location
+        </button>
+    </div>
+
+    <div class="stats-grid" id="provider-stats"></div>
+    <div class="section-title mt-4 mb-3" id="pending-title">Pending Requests</div>
+    <div class="appointments-list" id="provider-appointments-list"></div>
+</section>
 
                 <section id="view-schedule" class="view-section hidden">
                     <div class="schedule-manager-card">
