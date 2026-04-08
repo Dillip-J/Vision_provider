@@ -191,45 +191,72 @@ document.addEventListener('DOMContentLoaded', () => {
         upcomingBookings.forEach(apt => {
             const clientLabel = apt.client_name || "Patient";
             const shortId = apt.booking_id ? apt.booking_id.split('-')[0] : "N/A"; 
+            const isOnline = (apt.service_name || "").toLowerCase().includes('video') || (apt.service_name || "").toLowerCase().includes('online'); 
             
-            const isOnline = apt.service_name.toLowerCase().includes('video') || 
-                             apt.service_name.toLowerCase().includes('online') ||
-                             apt.address === "Not Provided" || apt.address === null; 
+            // 🚨 1. SMART TIME / ETA LOGIC
+            let timeDisplay = `<div><i class="fa-regular fa-clock text-blue"></i> Scheduled: ${apt.time}</div>`;
             
+            if (providerType === 'Pharmacy') {
+                // For pharmacies, apt.time is when it was ordered. We show a delivery target.
+                timeDisplay = `
+                    <div><i class="fa-solid fa-cart-shopping text-secondary"></i> Ordered: ${apt.time}</div>
+                    <div style="color: #f59e0b; font-weight: 600; margin-top: 4px;">
+                        <i class="fa-solid fa-bolt"></i> Deliver ASAP (Target: 45 mins)
+                    </div>
+                `;
+            } else if (providerType === 'Lab') {
+                timeDisplay = `
+                    <div><i class="fa-regular fa-clock text-blue"></i> Collection Time: ${apt.time}</div>
+                `;
+            }
+
+            // 🚨 2. ACCEPT / REJECT BUTTON LOGIC
             let actionButtons = '';
             
-            if (isOnline && providerType === 'Doctor') {
+            if (apt.status === 'pending') {
+                // If the order just came in, they must Accept or Reject it first
                 actionButtons += `
-                    <button class="btn-primary" style="background-color: #10B981; margin-right: 10px;" onclick="window.open('video-room.html?room=${apt.booking_id}', '_blank')">
-                        <i class="fa-solid fa-video"></i> Join Call
+                    <button class="btn-primary" style="background-color: #3b82f6; margin-right: 10px;" onclick="updateBookingStatus('${apt.booking_id}', 'confirmed')">
+                        <i class="fa-solid fa-thumbs-up"></i> Accept
+                    </button>
+                    <button class="btn-outline text-red" style="border-color: #ef4444;" onclick="updateBookingStatus('${apt.booking_id}', 'rejected')">
+                        <i class="fa-solid fa-xmark"></i> Reject
+                    </button>
+                `;
+            } else if (apt.status === 'confirmed') {
+                // If they already accepted it, show the Process/Join Call buttons
+                if (isOnline && providerType === 'Doctor') {
+                    actionButtons += `
+                        <button class="btn-primary" style="background-color: #10B981; margin-right: 10px;" onclick="window.open('video-room.html?room=${apt.booking_id}', '_blank')">
+                            <i class="fa-solid fa-video"></i> Join Call
+                        </button>
+                    `;
+                }
+                actionButtons += `
+                    <button class="btn-upload" onclick="openUploadModal('${apt.booking_id}', '${clientLabel}')">
+                        <i class="fa-solid fa-check-double"></i> Mark Completed
                     </button>
                 `;
             }
 
-            actionButtons += `
-                <button class="btn-upload" onclick="openUploadModal('${apt.booking_id}', '${clientLabel}')">
-                    <i class="fa-solid fa-check"></i> Process
-                </button>
-            `;
-
             listEl.innerHTML += `
-                <div class="provider-apt-card">
+                <div class="provider-apt-card" style="${apt.status === 'pending' ? 'border-left: 4px solid #f59e0b;' : 'border-left: 4px solid #10B981;'}">
                     <div class="apt-details">
                         <h3>${clientLabel}</h3>
-                        <div class="text-secondary" style="font-size: 0.9rem;">ID: ${shortId} • ${apt.service_name}</div>
+                        <div class="text-secondary" style="font-size: 0.9rem; margin-bottom: 8px;">
+                            ID: ${shortId} • <span style="text-transform: capitalize;">${apt.status}</span>
+                        </div>
                         <div class="apt-meta">
-                            <div><i class="fa-regular fa-clock text-blue"></i> ${apt.time}</div>
-                            ${isOnline ? '<div style="color: #10B981;"><i class="fa-solid fa-wifi"></i> Online Consult</div>' : `<div><i class="fa-solid fa-location-dot"></i> ${apt.address}</div>`}
+                            ${timeDisplay}
+                            ${isOnline ? '<div style="color: #10B981; margin-top: 4px;"><i class="fa-solid fa-wifi"></i> Online</div>' : `<div style="margin-top: 4px;"><i class="fa-solid fa-location-dot"></i> ${apt.address || 'In-Person'}</div>`}
                         </div>
                     </div>
-                    <div style="display: flex;">
+                    <div style="display: flex; align-items: center;">
                         ${actionButtons}
                     </div>
                 </div>
             `;
         });
-    }
-
     // ==========================================
     // --- 7. DYNAMIC UPLOAD MODAL ---
     // ==========================================
@@ -561,6 +588,40 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // ==========================================
+    // --- 15. ACCEPT / REJECT STATUS ENGINE ---
+    // ==========================================
+    window.updateBookingStatus = async function(bookingId, newStatus) {
+        // Confirm action so they don't accidentally reject an order
+        const actionText = newStatus === 'confirmed' ? 'Accept' : 'Reject';
+        if (!confirm(`Are you sure you want to ${actionText} this request?`)) return;
+
+        try {
+            // Note: You must ensure this route exists in your FastAPI backend!
+            const response = await fetch(`${API_BASE}/providers/bookings/${bookingId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.detail || "Failed to update status");
+            }
+
+            // Successfully updated in DB, now reload the UI
+            alert(`Request successfully marked as ${newStatus}!`);
+            loadAppointments(); 
+
+        } catch (error) {
+            console.error("Status Update Error:", error);
+            alert(`Error: ${error.message}`);
+        }
+    };
 
     // ==========================================
     // --- 13. LOGOUT ---
