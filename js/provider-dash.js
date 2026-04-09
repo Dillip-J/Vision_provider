@@ -257,6 +257,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
         });
+    } // <--- THIS WAS THE MISSING BRACKET
+
     // ==========================================
     // --- 7. DYNAMIC UPLOAD MODAL ---
     // ==========================================
