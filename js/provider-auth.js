@@ -13,15 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- 1. Session Guard ---
-    const activeProviderSession = localStorage.getItem('currentProvider');
-    if (activeProviderSession) {
-        // window.location.replace('provider-dash.html'); // 🚨 DISABLED FOR DEBUGGING
-        console.warn("Session Guard Redirect Disabled for Debugging.");
-        // return; 
-    }
-
-    // --- 2. Theme Toggling ---
+    // --- 1. Theme Toggling ---
     const themeToggleBtn = document.getElementById('theme-toggle');
     const themeIcon = document.getElementById('theme-icon');
     if (themeToggleBtn && themeIcon) {
@@ -43,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 3. Tab Switching ---
+    // --- 2. Tab Switching ---
     const tabLogin = document.getElementById('tab-provider-login');
     const tabSignup = document.getElementById('tab-provider-signup');
     const formLogin = document.getElementById('form-provider-login');
@@ -64,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tabSignup.addEventListener('click', () => switchTab(false));
     }
 
-    // --- 4. Dynamic Form Shape-Shifting ---
+    // --- 3. Dynamic Form Shape-Shifting ---
     const typeSelect = document.getElementById('provider-type-select');
     const nameLabel = document.getElementById('dynamic-name-label');
     const nameInput = document.getElementById('dynamic-name-input');
@@ -77,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateFormUI = () => {
         const val = typeSelect.value;
-        catSelect.innerHTML = ''; // Clear options
+        catSelect.innerHTML = ''; 
 
         if (val === 'Pharmacy') {
             brandIcon.className = 'fa-solid fa-pills';
@@ -122,8 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateFormUI(); 
     }
 
-   // ==========================================
-    // --- 5. Registration Logic (WITH GPS CAPTURE) ---
+    // ==========================================
+    // --- 4. Registration Logic (WITH GPS CAPTURE) ---
     // ==========================================
     [formLogin, formSignup].forEach(form => {
         if (!form) return;
@@ -149,14 +141,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const getProviderLocation = () => {
                 return new Promise((resolve, reject) => {
                     if (!navigator.geolocation) {
-                        resolve({ lat: null, lon: null }); 
+                        resolve({ lat: null, lon: null });
                     } else {
                         navigator.geolocation.getCurrentPosition(
-                            (position) => resolve({ 
-                                lat: position.coords.latitude, 
-                                lon: position.coords.longitude 
-                            }),
-                            (error) => resolve({ lat: null, lon: null }), 
+                            (position) => resolve({ lat: position.coords.latitude, lon: position.coords.longitude }),
+                            (error) => resolve({ lat: null, lon: null }),
                             { timeout: 10000 } 
                         );
                     }
@@ -165,7 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 const gps = await getProviderLocation();
-
                 const formData = new FormData();
                 
                 formData.append("name", document.getElementById('dynamic-name-input').value);
@@ -186,8 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append("license_document", fileInput.files[0]);
                 }
 
-                console.log("Sending Provider Registration request to:", `${API_BASE}/providers/register`);
-
                 const response = await fetch(`${API_BASE}/providers/register`, {
                     method: 'POST',
                     body: formData
@@ -195,7 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    console.error("Provider Registration Error:", errorData);
                     if (errorData.detail && typeof errorData.detail === 'string' && errorData.detail.toLowerCase().includes('already')) {
                         alert("Account already exists on this email.");
                     } else {
@@ -210,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateFormUI();
 
             } catch (err) {
-                console.error("Provider Registration Network/Server Error:", err);
+                console.error(err);
                 alert("Server connection failed. The server is currently disconnected.");
             } finally {
                 submitBtn.textContent = originalText;
@@ -220,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // --- 6. Login Logic ---
+    // --- 5. Login Logic (REDIRECT RESTORED) ---
     // ==========================================
     if (formLogin) {
         formLogin.addEventListener('submit', async (e) => {
@@ -235,19 +220,11 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
 
             try {
-                console.log("Attempting Provider Login for:", loginEmail);
-                console.log("Endpoint:", `${API_BASE}/providers/login`);
-
                 const response = await fetch(`${API_BASE}/providers/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: loginEmail,
-                        password: loginPassword
-                    })
+                    body: JSON.stringify({ email: loginEmail, password: loginPassword })
                 });
-
-                console.log("Response Status:", response.status);
 
                 if (response.status === 403) {
                     alert("Your account is still pending Admin approval. Please check back later.");
@@ -255,32 +232,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 if (!response.ok) {
-                    // Try to parse the error message if possible
-                    let errorMsg = "Invalid email or password.";
-                    try {
-                        const errorData = await response.json();
-                        errorMsg = errorData.detail || errorMsg;
-                        console.error("Provider Login Server Error:", errorData);
-                    } catch(e) {
-                        console.error("Provider Login Server Error (No JSON body)");
-                    }
-
-                    alert(`Login Failed: ${errorMsg}`);
+                    alert("Invalid email or password.");
                     return;
                 }
 
                 const data = await response.json();
-                console.log("Login Successful! Token received.");
 
                 localStorage.setItem('access_token', data.access_token);
                 localStorage.setItem('currentProvider', JSON.stringify(data.provider));
 
-                // 🚨 REDIRECT DISABLED FOR DEBUGGING 🚨
-                // window.location.replace('provider-dash.html');
-                alert("✅ API SUCCESS: Provider Token Saved! (Redirect Disabled)");
+                // 🚨 REDIRECT IS BACK ONLINE
+                window.location.replace('provider-dash.html');
 
             } catch (err) {
-                console.error("Provider Login Network/Server Error:", err);
+                console.error(err);
                 alert("Server connection failed. The server is currently disconnected.");
             } finally {
                 submitBtn.textContent = originalText;
