@@ -254,3 +254,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+// ==========================================
+// --- Password Visibility Toggle ---
+// ==========================================
+document.querySelectorAll('.toggle-password').forEach(icon => {
+    icon.addEventListener('click', function() {
+        // Find the input this specific icon controls
+        const targetId = this.getAttribute('data-target');
+        const inputField = document.getElementById(targetId);
+        
+        if (inputField) {
+            // Toggle type
+            const type = inputField.getAttribute('type') === 'password' ? 'text' : 'password';
+            inputField.setAttribute('type', type);
+            
+            // Toggle icon
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        }
+    });
+});

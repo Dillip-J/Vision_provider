@@ -1,115 +1,181 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vision - Provider Portal</title>
-    <link rel="stylesheet" href="css/provider.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-
-    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Dark Mode">
-        <i class="fa-regular fa-moon" id="theme-icon"></i>
+    <link rel="stylesheet" href="css/provider.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <button
+      id="theme-toggle"
+      class="theme-toggle"
+      aria-label="Toggle Dark Mode"
+    >
+      <i class="fa-regular fa-moon" id="theme-icon"></i>
     </button>
 
     <div class="auth-container">
-        <div class="brand-header">
-            <div class="logo-circle">
-                <i class="fa-solid fa-user-doctor" id="dynamic-brand-icon"></i>
+      <div class="brand-header">
+        <div class="logo-circle">
+          <i class="fa-solid fa-user-doctor" id="dynamic-brand-icon"></i>
+        </div>
+        <h1 class="brand-letter">Vision</h1>
+        <p class="brand-tagline">Partner Portal</p>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button class="tab active" id="tab-provider-login">Login</button>
+          <button class="tab" id="tab-provider-signup">Register</button>
+        </div>
+
+        <form id="form-provider-login" class="auth-form active-form">
+          <h2>Welcome Back</h2>
+          <p class="form-subtitle">
+            Access your practice or business dashboard
+          </p>
+
+          <div class="input-group">
+            <label>Registered Email</label>
+            <input
+              type="email"
+              id="provider-login-email"
+              placeholder="contact@business.com"
+              required
+            />
+          </div>
+
+          <div class="input-group">
+            <label>Password</label>
+            <div class="password-wrapper">
+              <input
+                type="password"
+                id="provider-login-password"
+                placeholder="••••••••"
+                required
+              />
+              <i
+                class="fa-regular fa-eye toggle-password"
+                data-target="provider-login-password"
+              ></i>
             </div>
-            <h1 class="brand-letter">Vision</h1>
-            <p class="brand-tagline">Partner Portal</p>
-        </div>
+          </div>
 
-        <div class="auth-card">
-            <div class="auth-tabs">
-                <button class="tab active" id="tab-provider-login">Login</button>
-                <button class="tab" id="tab-provider-signup">Register</button>
-            </div>
+          <button type="submit" class="btn-primary">Login to Portal</button>
+        </form>
 
-            <form id="form-provider-login" class="auth-form active-form">
-                <h2>Welcome Back</h2>
-                <p class="form-subtitle">Access your practice or business dashboard</p>
+        <form id="form-provider-signup" class="auth-form">
+          <h2>Join Vision</h2>
+          <p class="form-subtitle">
+            Register your practice, lab, or medical shop
+          </p>
 
-                <div class="input-group">
-                    <label>Registered Email</label>
-                    <input type="email" id="provider-login-email" placeholder="contact@business.com" required>
-                </div>
+          <div class="input-group">
+            <label>Business / Service Type *</label>
+            <select id="provider-type-select" required>
+              <option value="" disabled selected>
+                Select your category...
+              </option>
+              <option value="Doctor">Doctor / Specialist</option>
+              <option value="Lab">Diagnostic Lab</option>
+              <option value="Pharmacy">Medical Shop / Pharmacy</option>
+              <option value="Therapist">Physiotherapist / Therapist</option>
+            </select>
+          </div>
 
-                <div class="input-group">
-                    <label>Password</label>
-                    <input type="password" id="provider-login-password" placeholder="••••••••" required>
-                </div>
+          <div class="input-group">
+            <label id="dynamic-name-label">Full Name *</label>
+            <input
+              type="text"
+              id="dynamic-name-input"
+              placeholder="Dr. John Doe"
+              required
+            />
+          </div>
 
-                <button type="submit" class="btn-primary">Login to Portal</button>
-            </form>
+          <div class="input-group">
+            <label>Professional / Business Email *</label>
+            <input
+              type="email"
+              id="provider-signup-email"
+              placeholder="contact@business.com"
+              required
+            />
+          </div>
 
-            <form id="form-provider-signup" class="auth-form">
-                <h2>Join Vision</h2>
-                <p class="form-subtitle">Register your practice, lab, or medical shop</p>
+          <div class="input-group">
+            <label>Contact Number *</label>
+            <input
+              type="tel"
+              id="provider-signup-phone"
+              placeholder="e.g. 9876543210"
+              required
+            />
+          </div>
 
-                <div class="input-group">
-                    <label>Business / Service Type *</label>
-                    <select id="provider-type-select" required>
-                        <option value="" disabled selected>Select your category...</option>
-                        <option value="Doctor">Doctor / Specialist</option>
-                        <option value="Lab">Diagnostic Lab</option>
-                        <option value="Pharmacy">Medical Shop / Pharmacy</option>
-                        <option value="Therapist">Physiotherapist / Therapist</option>
-                    </select>
-                </div>
+          <div class="input-group">
+            <label id="dynamic-license-label">Medical License Number *</label>
+            <input
+              type="text"
+              id="dynamic-license-input"
+              placeholder="MCI-12345"
+              required
+            />
+          </div>
 
-                <div class="input-group">
-                    <label id="dynamic-name-label">Full Name *</label>
-                    <input type="text" id="dynamic-name-input" placeholder="Dr. John Doe" required>
-                </div>
-                
-                <div class="input-group">
-                    <label>Professional / Business Email *</label>
-                    <input type="email" id="provider-signup-email" placeholder="contact@business.com" required>
-                </div>
+          <div class="input-group">
+            <label id="dynamic-category-label">Specialization *</label>
+            <select id="dynamic-category-select" required></select>
+          </div>
 
-                <div class="input-group">
-                    <label>Contact Number *</label>
-                    <input type="tel" id="provider-signup-phone" placeholder="e.g. 9876543210" required>
-                </div>
+          <div class="input-group">
+            <label>Password *</label>
+            <input
+              type="password"
+              id="provider-signup-password"
+              placeholder="••••••••"
+              required
+            />
+          </div>
 
-                <div class="input-group">
-                    <label id="dynamic-license-label">Medical License Number *</label>
-                    <input type="text" id="dynamic-license-input" placeholder="MCI-12345" required>
-                </div>
-                
-                <div class="input-group">
-                    <label id="dynamic-category-label">Specialization *</label>
-                    <select id="dynamic-category-select" required>
-                        </select>
-                </div>
+          <div class="input-group file-upload-box">
+            <i class="fa-solid fa-file-arrow-up"></i>
+            <span id="dynamic-upload-label" class="upload-title"
+              >Upload License (PDF)</span
+            >
+            <p class="upload-subtitle">Required for Admin Verification</p>
+            <input
+              type="file"
+              id="provider-signup-license-file"
+              accept=".pdf"
+              required
+            />
+          </div>
 
-                <div class="input-group">
-                    <label>Password *</label>
-                    <input type="password" id="provider-signup-password" placeholder="••••••••" required>
-                </div>
+          <button type="submit" class="btn-primary mt-4">
+            Submit Application
+          </button>
+        </form>
+      </div>
 
-                <div class="input-group file-upload-box">
-                    <i class="fa-solid fa-file-arrow-up"></i>
-                    <span id="dynamic-upload-label" class="upload-title">Upload License (PDF)</span>
-                    <p class="upload-subtitle">Required for Admin Verification</p>
-                    <input type="file" id="provider-signup-license-file" accept=".pdf" required>
-                </div>
-
-                <button type="submit" class="btn-primary mt-4">Submit Application</button>
-            </form>
-        </div>
-        
-        <div class="back-link-container">
-            <a href="https://dillip-j.github.io/Vision-24-7" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Patient Site</a>
-        </div>
+      <div class="back-link-container">
+        <a href="https://dillip-j.github.io/Vision-24-7" class="back-link"
+          ><i class="fa-solid fa-arrow-left"></i> Back to Patient Site</a
+        >
+      </div>
     </div>
-    
+
     <script src="js/config.js"></script>
     <script src="js/auth_guard.js"></script>
     <script src="js/provider-auth.js"></script>
-</body>
+  </body>
 </html>
