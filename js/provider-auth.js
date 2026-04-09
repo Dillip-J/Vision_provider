@@ -16,8 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. Session Guard ---
     const activeProviderSession = localStorage.getItem('currentProvider');
     if (activeProviderSession) {
-        window.location.replace('provider-dash.html');
-        return; 
+        // window.location.replace('provider-dash.html'); // 🚨 DISABLED FOR DEBUGGING
+        console.warn("Session Guard Redirect Disabled for Debugging.");
+        // return; 
     }
 
     // --- 2. Theme Toggling ---
@@ -145,27 +146,24 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.textContent = "Fetching Location & Submitting...";
             submitBtn.disabled = true;
 
-            // --- THE GPS PROMPT ---
-            // We wrap geolocation in a Promise so we can await it before sending data to the server
             const getProviderLocation = () => {
                 return new Promise((resolve, reject) => {
                     if (!navigator.geolocation) {
-                        resolve({ lat: null, lon: null }); // Browser doesn't support it
+                        resolve({ lat: null, lon: null }); 
                     } else {
                         navigator.geolocation.getCurrentPosition(
                             (position) => resolve({ 
                                 lat: position.coords.latitude, 
                                 lon: position.coords.longitude 
                             }),
-                            (error) => resolve({ lat: null, lon: null }), // User blocked it, fail gracefully
-                            { timeout: 10000 } // Give up after 10 seconds
+                            (error) => resolve({ lat: null, lon: null }), 
+                            { timeout: 10000 } 
                         );
                     }
                 });
             };
 
             try {
-                // Wait for the user to click "Allow" or "Block"
                 const gps = await getProviderLocation();
 
                 const formData = new FormData();
@@ -178,7 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append("license_number", document.getElementById('dynamic-license-input').value);
                 formData.append("category", document.getElementById('dynamic-category-select').value);
 
-                // 🚨 Inject GPS coordinates if the user allowed it!
                 if (gps.lat && gps.lon) {
                     formData.append("latitude", gps.lat);
                     formData.append("longitude", gps.lon);
@@ -189,6 +186,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append("license_document", fileInput.files[0]);
                 }
 
+                console.log("Sending Provider Registration request to:", `${API_BASE}/providers/register`);
+
                 const response = await fetch(`${API_BASE}/providers/register`, {
                     method: 'POST',
                     body: formData
@@ -196,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!response.ok) {
                     const errorData = await response.json();
+                    console.error("Provider Registration Error:", errorData);
                     if (errorData.detail && typeof errorData.detail === 'string' && errorData.detail.toLowerCase().includes('already')) {
                         alert("Account already exists on this email.");
                     } else {
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateFormUI();
 
             } catch (err) {
-                console.error(err);
+                console.error("Provider Registration Network/Server Error:", err);
                 alert("Server connection failed. The server is currently disconnected.");
             } finally {
                 submitBtn.textContent = originalText;
@@ -235,6 +235,9 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
 
             try {
+                console.log("Attempting Provider Login for:", loginEmail);
+                console.log("Endpoint:", `${API_BASE}/providers/login`);
+
                 const response = await fetch(`${API_BASE}/providers/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -244,25 +247,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     })
                 });
 
+                console.log("Response Status:", response.status);
+
                 if (response.status === 403) {
                     alert("Your account is still pending Admin approval. Please check back later.");
                     return;
                 }
 
                 if (!response.ok) {
-                    alert("Invalid email or password.");
+                    // Try to parse the error message if possible
+                    let errorMsg = "Invalid email or password.";
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.detail || errorMsg;
+                        console.error("Provider Login Server Error:", errorData);
+                    } catch(e) {
+                        console.error("Provider Login Server Error (No JSON body)");
+                    }
+
+                    alert(`Login Failed: ${errorMsg}`);
                     return;
                 }
 
                 const data = await response.json();
+                console.log("Login Successful! Token received.");
 
                 localStorage.setItem('access_token', data.access_token);
                 localStorage.setItem('currentProvider', JSON.stringify(data.provider));
 
-                window.location.replace('provider-dash.html');
+                // 🚨 REDIRECT DISABLED FOR DEBUGGING 🚨
+                // window.location.replace('provider-dash.html');
+                alert("✅ API SUCCESS: Provider Token Saved! (Redirect Disabled)");
 
             } catch (err) {
-                console.error(err);
+                console.error("Provider Login Network/Server Error:", err);
                 alert("Server connection failed. The server is currently disconnected.");
             } finally {
                 submitBtn.textContent = originalText;
