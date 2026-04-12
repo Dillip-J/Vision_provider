@@ -238,10 +238,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const data = await response.json();
 
-                localStorage.setItem('access_token', data.access_token);
+                // 🚨 THE FIX: SAVING TO THE SECURE PROVIDER MEMORY SLOT
+                localStorage.setItem('provider_token', data.access_token);
                 localStorage.setItem('currentProvider', JSON.stringify(data.provider));
 
-                // 🚨 REDIRECT IS BACK ONLINE
+                // REDIRECT TO DASHBOARD
                 window.location.replace('provider-dash.html');
 
             } catch (err) {
@@ -253,7 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-});
 // ==========================================
 // --- Password Visibility Toggle ---
 // ==========================================
