@@ -1,5 +1,4 @@
 // js/provider-auth.js
-
 document.addEventListener('DOMContentLoaded', () => {
 
     // ==========================================
@@ -169,7 +168,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append("longitude", gps.lon);
                 }
 
-                const fileInput = document.getElementById('license-upload');
+                // 🚨 FIXED: Grab the correct file input ID from HTML!
+                const fileInput = document.getElementById('provider-signup-license-file');
                 if (fileInput && fileInput.files.length > 0) {
                     formData.append("license_document", fileInput.files[0]);
                 }
@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const data = await response.json();
 
-                // 🚨 THE FIX: SAVING TO THE SECURE PROVIDER MEMORY SLOT
+                // 🚨 FIXED: Saving to the secure provider memory slot so it doesn't clash with Patients
                 localStorage.setItem('provider_token', data.access_token);
                 localStorage.setItem('currentProvider', JSON.stringify(data.provider));
 
@@ -254,6 +254,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+}); // 🚨 FIXED: Properly closes the DOMContentLoaded event listener!
+
+
 // ==========================================
 // --- Password Visibility Toggle ---
 // ==========================================
