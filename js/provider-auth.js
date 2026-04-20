@@ -1,6 +1,9 @@
 // js/provider-auth.js
 document.addEventListener('DOMContentLoaded', () => {
 
+    // 🚨 THE FIX: Define your local server API link!
+    const API_BASE = window.API_BASE || 'http://127.0.0.1:8000';
+
     // ==========================================
     // --- 0. GLOBAL ROUTING ENGINE ---
     // ==========================================
@@ -160,22 +163,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append("phone", document.getElementById('provider-signup-phone').value);
                 formData.append("password", document.getElementById('provider-signup-password').value);
                 formData.append("provider_type", typeSelect.value); 
-                // formData.append("license_number", document.getElementById('dynamic-license-input').value);
                 formData.append("category", document.getElementById('dynamic-category-select').value);
 
                 if (gps.lat && gps.lon) {
                     formData.append("latitude", gps.lat);
                     formData.append("longitude", gps.lon);
                 }
-
                 
-                // 🚨 FIXED: Grab the correct file input ID from HTML!
                 const fileInput = document.getElementById('provider-signup-license-file');
                 if (fileInput && fileInput.files.length > 0) {
                     formData.append("license_document", fileInput.files[0]);
                 }
-                const formObj = Object.fromEntries(formData);
-                console.log(formObj)
 
                 const response = await fetch(`${API_BASE}/providers/register`, {
                     method: 'POST',
@@ -192,14 +190,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                alert(`Success! Your application has been sent to the Admin for verification.`);
+                // Perfect for MVP: Alert success and auto-switch to login tab!
+                alert(`Registration Success! You can now log in.`);
                 switchTab(true); 
                 formSignup.reset();
                 updateFormUI();
 
             } catch (err) {
                 console.error(err);
-                alert("Server connection failed. The server is currently disconnected.");
+                alert("Server connection failed. Make sure your local uvicorn server is running.");
             } finally {
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
@@ -208,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // --- 5. Login Logic (REDIRECT RESTORED) ---
+    // --- 5. Login Logic ---
     // ==========================================
     if (formLogin) {
         formLogin.addEventListener('submit', async (e) => {
@@ -230,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (response.status === 403) {
-                    alert("Your account is still pending Admin approval. Please check back later.");
+                    alert("Your account is still pending. (Make sure you changed 'status=\"pending\"' to 'status=\"approved\"' in routers/providers.py!)");
                     return;
                 }
 
@@ -241,16 +240,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const data = await response.json();
 
-                // 🚨 FIXED: Saving to the secure provider memory slot so it doesn't clash with Patients
                 localStorage.setItem('provider_token', data.access_token);
                 localStorage.setItem('currentProvider', JSON.stringify(data.provider));
 
-                // REDIRECT TO DASHBOARD
                 window.location.replace('provider-dash.html');
 
             } catch (err) {
                 console.error(err);
-                alert("Server connection failed. The server is currently disconnected.");
+                alert("Server connection failed. Make sure your local uvicorn server is running.");
             } finally {
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
@@ -258,24 +255,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-}); // 🚨 FIXED: Properly closes the DOMContentLoaded event listener!
-
+}); 
 
 // ==========================================
 // --- Password Visibility Toggle ---
 // ==========================================
 document.querySelectorAll('.toggle-password').forEach(icon => {
     icon.addEventListener('click', function() {
-        // Find the input this specific icon controls
         const targetId = this.getAttribute('data-target');
         const inputField = document.getElementById(targetId);
         
         if (inputField) {
-            // Toggle type
             const type = inputField.getAttribute('type') === 'password' ? 'text' : 'password';
             inputField.setAttribute('type', type);
             
-            // Toggle icon
             this.classList.toggle('fa-eye');
             this.classList.toggle('fa-eye-slash');
         }
