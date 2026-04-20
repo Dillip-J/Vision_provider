@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append("phone", document.getElementById('provider-signup-phone').value);
                 formData.append("password", document.getElementById('provider-signup-password').value);
                 formData.append("provider_type", typeSelect.value); 
-                formData.append("license_number", document.getElementById('dynamic-license-input').value);
+                // formData.append("license_number", document.getElementById('dynamic-license-input').value);
                 formData.append("category", document.getElementById('dynamic-category-select').value);
 
                 if (gps.lat && gps.lon) {
@@ -168,11 +168,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append("longitude", gps.lon);
                 }
 
+                
                 // 🚨 FIXED: Grab the correct file input ID from HTML!
                 const fileInput = document.getElementById('provider-signup-license-file');
                 if (fileInput && fileInput.files.length > 0) {
                     formData.append("license_document", fileInput.files[0]);
                 }
+                const formObj = Object.fromEntries(formData);
+                console.log(formObj)
 
                 const response = await fetch(`${API_BASE}/providers/register`, {
                     method: 'POST',

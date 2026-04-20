@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vision - Provider Dashboard</title>
-    <link rel="stylesheet" href="css/provider.css"> 
+    <!-- <link rel="stylesheet" href="css/home.css"> -->
     <link rel="stylesheet" href="css/provider-dashboard.css"> 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -22,99 +22,166 @@
             </div>
             
             <nav class="sidebar-nav">
-                <a href="#" class="nav-item active" id="tab-appointments"><i class="fa-solid fa-calendar-check"></i> Requests</a>
-                <a href="#" class="nav-item" id="tab-schedule"><i class="fa-solid fa-clock"></i> Availability</a>
-                <a href="#" class="nav-item" id="tab-records"><i class="fa-solid fa-file-waveform"></i> History</a>
-                <a href="#" class="nav-item" id="tab-earnings"><i class="fa-solid fa-wallet"></i> Earnings</a>
+                <button class="nav-item active" id="tab-appointments"><i class="fa-solid fa-calendar-check"></i> Requests</button>
+                <button class="nav-item" id="tab-schedule"><i class="fa-solid fa-clock"></i> Availability</button>
+                <button class="nav-item" id="tab-records"><i class="fa-solid fa-file-waveform"></i> History</button>
+                <button class="nav-item" id="tab-earnings"><i class="fa-solid fa-wallet"></i> Earnings</button>
+                <button class="nav-item" id="tab-profile"><i class="fa-solid fa-user-gear"></i> Settings</button>
+                <button class="nav-item" id="tab-catalog"><i class="fa-solid fa-list"></i> Catalog & Services</button>
             </nav>
 
             <div class="sidebar-bottom">
-                <button id="theme-toggle" class="btn-sidebar-outline w-100 mb-2">
-                    <i class="fa-regular fa-moon" id="theme-icon"></i> Theme
-                </button>
-                <button class="btn-sidebar-outline w-100 text-red" id="btn-logout">
-                    <i class="fa-solid fa-right-from-bracket"></i> Logout
-                </button>
+                <button id="theme-toggle" class="btn-sidebar-outline"><i class="fa-regular fa-moon" id="theme-icon"></i> Theme</button>
+                <button class="btn-sidebar-outline text-red" id="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
             </div>
         </aside>
 
         <div class="dash-main">
             <header class="dash-header">
-                <div>
-                    <h1 id="welcome-message">Loading...</h1>
-                    <p class="text-secondary" id="clinic-name">Fetching your business details...</p>
+                <div class="header-profile-box">
+                    <img id="header-profile-img" src="" alt="Provider Photo">
+                    <div>
+                        <h1 id="welcome-message">Loading...</h1>
+                        <p id="clinic-name">Fetching business details...</p>
+                    </div>
                 </div>
-                <div class="header-profile">
-                    <div class="provider-avatar-small" id="header-initials">--</div>
-                    <button id="mobile-btn-logout" class="mobile-only-btn">
-                        <i class="fa-solid fa-right-from-bracket text-red"></i>
-                    </button>
-                </div>
+                <button id="mobile-btn-logout" class="mobile-only-btn text-red"><i class="fa-solid fa-right-from-bracket"></i></button>
             </header>
 
             <div class="dash-content">
                 
-                <section id="view-appointments" class="view-section">
-            <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <div>
-            <h3 style="margin: 0; font-size: 1rem;"><i class="fa-solid fa-location-crosshairs text-blue"></i> Clinic GPS</h3>
-            <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">Sync your current location to provide accurate ETAs to patients.</p>
-        </div>
-        <button id="btn-update-clinic-loc" class="btn-outline" style="padding: 8px 16px;">
-            Update Location
-        </button>
-    </div>
+                <section id="view-appointments" class="view-section active">
+                    <div class="dash-card card-header-row">
+                        <div>
+                            <h3><i class="fa-solid fa-location-crosshairs text-blue"></i> Clinic GPS</h3>
+                            <p>Sync your current location to provide accurate ETAs.</p>
+                        </div>
+                        <button class="btn-outline text-blue">Update Location</button>
+                    </div>
 
-    <div class="stats-grid" id="provider-stats"></div>
-    <div class="section-title mt-4 mb-3" id="pending-title">Pending Requests</div>
-    <div class="appointments-list" id="provider-appointments-list"></div>
-</section>
+                    <div class="stats-grid" id="provider-stats"></div>
+                    <h2 id="pending-title">Active Requests</h2>
+                    <div class="list-container" id="provider-appointments-list"></div>
+                </section>
 
                 <section id="view-schedule" class="view-section hidden">
-                    <div class="schedule-manager-card">
-                        <div class="card-header">
-                            <h2 class="card-title">Manage Operating Hours</h2>
-                            <p class="card-subtitle">Block out times your business is closed or unavailable.</p>
+                    <div class="dash-card">
+                        <h2>Manage Operating Hours</h2>
+                        <p>Block out times your business is closed or unavailable.</p>
+                        
+                        <div class="schedule-controls" id="duration-control">
+                            <label>Slot Duration:</label>
+                            <select id="slot-duration-select" class="form-control slot-duration-select">
+                                <option value="60">1 Hour Slots</option>
+                                <option value="30">30 Minute Slots</option>
+                            </select>
                         </div>
-                        <div class="mt-4 mb-3 fw-bold"><i class="fa-regular fa-calendar"></i> Select Date</div>
+
+                        <h3><i class="fa-regular fa-calendar text-blue"></i> Select Day</h3>
                         <div class="date-scroll-container" id="provider-date-container"></div>
-                        <div class="mt-4 mb-3 fw-bold flex-between">
-                            <span><i class="fa-regular fa-clock"></i> Time Slots</span>
-                        </div>
+                        
+                        <h3><i class="fa-regular fa-clock text-blue"></i> Time Slots</h3>
                         <div class="time-grid" id="provider-time-container"></div>
                     </div>
                 </section>
 
                 <section id="view-records" class="view-section hidden">
-                    <div class="section-header mb-4">
-                        <h2 class="section-title" id="history-title">Completed Records</h2>
-                        <p class="text-secondary">Access history and uploaded documents securely.</p>
-                    </div>
-                    <div class="record-table-container">
-                        <table class="record-table">
-                            <thead>
-                                <tr>
-                                    <th>Client / Patient</th>
-                                    <th>Date</th>
-                                    <th>Service Type</th>
-                                    <th>Notes / Remarks</th>
-                                    <th>Document</th>
-                                </tr>
-                            </thead>
-                            <tbody id="records-list">
-                                </tbody>
-                        </table>
+                    <div class="dash-card">
+                        <h2>Completed Records</h2>
+                        <p>Access history and clinical notes securely.</p>
+                        <div class="table-container">
+                            <table class="records-table">
+                                <thead>
+                                    <tr>
+                                        <th>Patient / Client</th>
+                                        <th>Date & Time</th>
+                                        <th>Service Type</th>
+                                        <th>Clinical Notes / Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="records-list"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 
                 <section id="view-earnings" class="view-section hidden">
-                    <div class="section-header mb-4">
-                        <h2 class="section-title">Revenue Dashboard</h2>
-                        <p class="text-secondary">Track your earnings from completed orders and consults.</p>
-                    </div>
+                    <h2>Revenue Dashboard</h2>
+                    <p>Track your earnings from completed orders and consults.</p>
                     <div class="stats-grid" id="earnings-stats"></div>
-                    <div class="section-title mt-4 mb-3">Recent Transactions</div>
-                    <div class="appointments-list" id="transactions-list"></div>
+                    <h3>Recent Transactions</h3>
+                    <div class="list-container" id="transactions-list"></div>
+                </section>
+
+                <section id="view-profile" class="view-section hidden">
+                    <h2>Settings & Payouts</h2>
+                    <p>Update your public business profile and bank account for automated payouts.</p>
+
+                    <form id="form-provider-profile" class="mt-24">
+                        <div class="profile-grid">
+                            
+                            <div class="dash-card">
+                                <h3><i class="fa-regular fa-id-card text-blue"></i> Business Information</h3>
+                                
+                                <div class="profile-upload-action">
+                                    <button type="button" class="btn-outline text-blue btn-small" id="btn-trigger-upload">
+                                        <i class="fa-solid fa-camera"></i> Change Photo
+                                    </button>
+                                    <input type="file" id="profile-photo-input" accept="image/*" class="hidden">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Business / Provider Name</label>
+                                    <input type="text" id="prof-name" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Contact Phone</label>
+                                    <input type="text" id="prof-phone" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Detailed Public Bio / Description</label>
+                                    <textarea id="prof-bio" rows="6" class="form-control" placeholder="List your degrees, specializations, or specific business details..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="dash-card">
+                                <h3><i class="fa-solid fa-building-columns text-green"></i> Bank Details for Payouts</h3>
+                                
+                                <div class="form-group">
+                                    <label>Bank Name</label>
+                                    <input type="text" id="prof-bank-name" class="form-control" placeholder="e.g. HDFC Bank">
+                                </div>
+                                <div class="form-group">
+                                    <label>Account Number</label>
+                                    <input type="text" id="prof-acc-no" class="form-control" placeholder="Enter New Account Number">
+                                </div>
+                                <div class="form-group">
+                                    <label>IFSC / Routing Code</label>
+                                    <input type="text" id="prof-ifsc" class="form-control" placeholder="Enter New IFSC Code">
+                                </div>
+                                
+                                <div class="alert-warning">
+                                    <i class="fa-solid fa-shield-halved"></i> Your bank details are encrypted and securely masked. Leave fields blank to keep existing details.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-right mt-24">
+                            <button type="submit" id="btn-save-profile" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section id="view-catalog" class="view-section hidden">
+                    <div class="dash-card card-header-row">
+                        <div>
+                            <h2 class="catalog-title-text" id="catalog-title">Service Catalog</h2>
+                            <p id="catalog-subtitle">Manage the services or items you offer to patients.</p>
+                        </div>
+                        <button class="btn-primary" id="open-catalog-btn"><i class="fa-solid fa-plus"></i> Add Item</button>
+                    </div>
+
+                    <div class="profile-grid" id="catalog-list"></div>
                 </section>
 
             </div>
@@ -124,38 +191,54 @@
     <div class="modal-overlay hidden" id="upload-modal">
         <div class="modal-container">
             <button class="modal-close" id="close-upload-btn"><i class="fa-solid fa-xmark"></i></button>
-            <div class="modal-header">
-                <h2 id="modal-dynamic-title">Complete Service</h2>
-                <p>Upload service details and final reports</p>
-            </div>
-            <form id="form-upload-record" class="modal-scroll-content">
+            <h2 id="modal-dynamic-title">Complete Service</h2>
+            
+            <form id="form-upload-record" class="modal-form">
                 <input type="hidden" id="record-booking-id">
-                <div class="alert-box alert-info mb-3">
-                    <i class="fa-solid fa-circle-info"></i>
-                    <div>
-                        <strong>Client: <span id="record-patient-name">...</span></strong>
-                        <p>ID: <span id="record-display-id">...</span></p>
-                    </div>
+                <div class="modal-client-box">
+                    <strong>Client: <span id="record-patient-name">...</span></strong>
                 </div>
-                <div class="input-group mb-3">
+                <div class="form-group">
                     <label id="modal-notes-label">Clinical Notes / Remarks *</label>
-                    <textarea id="record-notes" rows="4" required></textarea>
+                    <textarea id="record-notes" rows="4" class="form-control" required></textarea>
                 </div>
-                <div class="input-group mb-3">
-                    <label id="modal-upload-label">Upload Report / Invoice (Optional)</label>
-                    <div class="file-upload-box" id="report-upload-box">
-                        <i class="fa-solid fa-file-arrow-up"></i>
-                        <span>Attach PDF or Image</span>
-                        <input type="file" id="record-file" accept="image/*,.pdf">
-                    </div>
+                <button type="submit" class="btn-primary btn-block">Mark Completed</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="catalog-modal">
+        <div class="modal-container">
+            <button class="modal-close" id="close-catalog-btn"><i class="fa-solid fa-xmark"></i></button>
+            <h2 id="catalog-modal-title">Add to Catalog</h2>
+            
+            <form id="form-catalog-add" class="modal-form">
+                <div class="form-group">
+                    <label id="cat-name-label">Item / Service Name *</label>
+                    <input type="text" id="cat-name" class="form-control" required>
                 </div>
-                <button type="submit" class="btn-primary w-100">Mark Completed</button>
+                <div class="form-group">
+                    <label>Price (₹) *</label>
+                    <input type="number" id="cat-price" class="form-control" required min="1">
+                </div>
+                <div class="form-group">
+                    <label id="cat-desc-label">Description / Details</label>
+                    <textarea id="cat-desc" rows="3" class="form-control"></textarea>
+                </div>
+                <div class="form-group hidden checkbox-group" id="rx-checkbox-group">
+                    <input type="checkbox" id="cat-rx-required" class="checkbox-input">
+                    <label class="rx-label">Requires Medical Prescription</label>
+                </div>
+                <div class="form-group hidden checkbox-group" id="home-col-checkbox-group">
+                    <input type="checkbox" id="cat-home-col" class="checkbox-input">
+                    <label class="standard-label">Home Collection Available</label>
+                </div>
+                <button type="submit" class="btn-primary btn-block mt-24">Save to Catalog</button>
             </form>
         </div>
     </div>
     
     <script src="js/config.js"></script>
-    <script src="js/provider-guard.js"></script>
     <script src="js/provider-dash.js"></script>
 </body>
 </html>

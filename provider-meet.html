@@ -1,0 +1,27 @@
+<!-- # provider-meet.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vision - Secure Video Consultation</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/video-room.css">
+    
+    <script src="https://meet.jit.si/external_api.js"></script>
+</head>
+<body>
+
+    <div class="video-header">
+        <div class="brand"><i class="fa-solid fa-briefcase-medical"></i> Vision Telemedicine</div>
+        <button class="leave-btn" id="btn-leave-call"><i class="fa-solid fa-phone-slash"></i> End Consultation</button>
+    </div>
+
+    <div id="jitsi-container"></div>
+    <script src="js/config.js"></script>
+    <script src="js/provider-meet.js"></script>
+</body>
+</html>
