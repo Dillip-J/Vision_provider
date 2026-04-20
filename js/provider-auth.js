@@ -1,8 +1,6 @@
 // js/provider-auth.js
 document.addEventListener('DOMContentLoaded', () => {
 
-    // 🚨 THE FIX: Define your local server API link!
-    const API_BASE = window.API_BASE || 'http://127.0.0.1:8000';
 
     // ==========================================
     // --- 0. GLOBAL ROUTING ENGINE ---
