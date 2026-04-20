@@ -2,7 +2,6 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   
-
     // --- 1. AUTHENTICATION & SESSION CHECK ---
     const token = localStorage.getItem('provider_token');
     const currentProviderString = localStorage.getItem('currentProvider'); 
@@ -24,12 +23,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const providerType = currentProvider.type || "Doctor"; 
     const providerName = currentProvider.name || "Provider";
 
-    // --- 2. HEADER & UI INITIALIZATION ---
+    // --- 2. HEADER & UI INITIALIZATION (🚨 BULLETPROOF IMAGE FIX APPLIED HERE) ---
     const headerImg = document.getElementById("header-profile-img");
     const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(providerName)}&background=1E293B&color=fff&size=128`;
 
     if (currentProvider.profile_photo_url) {
-        if (headerImg) headerImg.src = `${API_BASE}${currentProvider.profile_photo_url}`;
+        const photoUrl = currentProvider.profile_photo_url;
+        // Check if it's already a full web link (like Cloudinary)
+        if (photoUrl.startsWith('http')) {
+            if (headerImg) headerImg.src = photoUrl;
+        } else {
+            // If it's a local database path (/uploads/...), attach the API_BASE
+            if (headerImg) headerImg.src = `${API_BASE}${photoUrl}`;
+        }
     } else {
         if (headerImg) headerImg.src = defaultAvatar;
     }
@@ -720,7 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 14. PROFILE PHOTO UPLOAD LOGIC ---
+    // --- 14. PROFILE PHOTO UPLOAD LOGIC (🚨 BULLETPROOF IMAGE FIX APPLIED HERE) ---
     function setupDocumentUpload() {
         const fileInput = document.getElementById("profile-photo-input");
         const triggerBtn = document.getElementById("btn-trigger-upload");
@@ -749,7 +755,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!res.ok) throw new Error("Upload failed.");
                     
                     const data = await res.json();
-                    const fullUrl = `${API_BASE}${data.url}`;
+                    
+                    // Smart link construction
+                    let fullUrl = data.url;
+                    if (!fullUrl.startsWith('http')) {
+                        fullUrl = `${API_BASE}${data.url}`;
+                    }
                     
                     const headerImg = document.getElementById("header-profile-img");
                     if(headerImg) headerImg.src = fullUrl;
