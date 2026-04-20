@@ -1,9 +1,7 @@
 // js/provider-dash.js
 
 document.addEventListener('DOMContentLoaded', () => {
-
-    // 🚨 THE FIX: Force this file to pull the backend URL from your config.js
-    const API_BASE = window.API_BASE || 'http://127.0.0.1:8000';
+  
 
     // --- 1. AUTHENTICATION & SESSION CHECK ---
     const token = localStorage.getItem('provider_token');
