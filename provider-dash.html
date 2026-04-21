@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vision - Provider Dashboard</title>
-    <!-- <link rel="stylesheet" href="css/home.css"> -->
     <link rel="stylesheet" href="css/provider-dashboard.css"> 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -161,7 +160,7 @@
                                 </div>
                                 
                                 <div class="alert-warning">
-                                    <i class="fa-solid fa-shield-halved"></i> Your bank details are encrypted and securely masked. Leave fields blank to keep existing details.
+                                    <i class="fa-solid fa-shield-halved"></i> Only update if you want to override existing details.
                                 </div>
                             </div>
                         </div>
@@ -198,11 +197,18 @@
                 <div class="modal-client-box">
                     <strong>Client: <span id="record-patient-name">...</span></strong>
                 </div>
+                
                 <div class="form-group">
                     <label id="modal-notes-label">Clinical Notes / Remarks *</label>
-                    <textarea id="record-notes" rows="4" class="form-control" required></textarea>
+                    <textarea id="record-notes" rows="4" class="form-control" required placeholder="Type the review/notes here..."></textarea>
                 </div>
-                <button type="submit" class="btn-primary btn-block">Mark Completed</button>
+                
+                <div class="form-group" style="margin-top: 15px;">
+                    <label style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 5px; display: block;">Attach Official Report (PDF/Image) - Optional</label>
+                    <input type="file" id="record-file" accept=".pdf,image/*" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--card-bg); color: var(--text-primary);">
+                </div>
+
+                <button type="submit" class="btn-primary btn-block mt-24">Mark Completed</button>
             </form>
         </div>
     </div>
