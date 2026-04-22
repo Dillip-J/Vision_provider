@@ -314,7 +314,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             timeCon.innerHTML = times.map(t => {
-                const isAvail = saved.some(s => s === t);
+                // 🚨 FIX 1: If in 1-Hour mode, check if BOTH halves are in the DB!
+                let isAvail = false;
+                if (duration === 60) {
+                    const halfHour = t.replace(':00', ':30'); // Converts "03:00 PM" to "03:30 PM"
+                    isAvail = saved.includes(t) && saved.includes(halfHour);
+                } else {
+                    isAvail = saved.includes(t);
+                }
+
                 return `<button class="btn-time-slot ${isAvail ? 'available' : ''}" data-time="${t}">
                             ${isAvail ? '<i class="fa-solid fa-check-circle"></i>' : '<i class="fa-solid fa-ban"></i>'} ${t}
                         </button>`;
@@ -323,7 +331,18 @@ document.addEventListener('DOMContentLoaded', () => {
             timeCon.querySelectorAll('.btn-time-slot').forEach(btn => {
                 btn.addEventListener('click', async function() {
                     this.classList.toggle('available');
-                    const avail = Array.from(timeCon.querySelectorAll('.available')).map(b => b.getAttribute('data-time'));
+                    
+                    let avail = Array.from(timeCon.querySelectorAll('.available')).map(b => b.getAttribute('data-time'));
+                    
+                    // 🚨 FIX 2: If saving in 1-Hour mode, secretly inject the 30-min blocks to the DB!
+                    if (duration === 60) {
+                        const expandedAvail = new Set();
+                        avail.forEach(timeStr => {
+                            expandedAvail.add(timeStr);
+                            expandedAvail.add(timeStr.replace(':00', ':30'));
+                        });
+                        avail = Array.from(expandedAvail);
+                    }
                     
                     try {
                         await fetch(`${API_BASE}/providers/schedule`, { 
@@ -331,6 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
                             body: JSON.stringify({ day: day, slots: avail }) 
                         });
+                        
                         this.innerHTML = this.classList.contains('available') 
                             ? `<i class="fa-solid fa-check-circle"></i> ${this.getAttribute('data-time')}` 
                             : `<i class="fa-solid fa-ban"></i> ${this.getAttribute('data-time')}`;
@@ -357,7 +377,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if(dayBtns.length > 0) { dayBtns[0].classList.add('active'); renderTimes('Monday'); }
     }
-
 
     // =========================================================================
     // --- 8. PATIENT RECORDS / HISTORY LOGIC ---
