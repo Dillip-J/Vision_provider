@@ -314,15 +314,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             timeCon.innerHTML = times.map(t => {
-                // 🚨 FIX 1: If in 1-Hour mode, check if BOTH halves are in the DB!
-                let isAvail = false;
-                if (duration === 60) {
-                    const halfHour = t.replace(':00', ':30'); // Converts "03:00 PM" to "03:30 PM"
-                    isAvail = saved.includes(t) && saved.includes(halfHour);
-                } else {
-                    isAvail = saved.includes(t);
-                }
-
+                // 🚨 STRICT MATCHING: No more secret slicing!
+                const isAvail = saved.includes(t);
+                
                 return `<button class="btn-time-slot ${isAvail ? 'available' : ''}" data-time="${t}">
                             ${isAvail ? '<i class="fa-solid fa-check-circle"></i>' : '<i class="fa-solid fa-ban"></i>'} ${t}
                         </button>`;
@@ -332,17 +326,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.addEventListener('click', async function() {
                     this.classList.toggle('available');
                     
-                    let avail = Array.from(timeCon.querySelectorAll('.available')).map(b => b.getAttribute('data-time'));
-                    
-                    // 🚨 FIX 2: If saving in 1-Hour mode, secretly inject the 30-min blocks to the DB!
-                    if (duration === 60) {
-                        const expandedAvail = new Set();
-                        avail.forEach(timeStr => {
-                            expandedAvail.add(timeStr);
-                            expandedAvail.add(timeStr.replace(':00', ':30'));
-                        });
-                        avail = Array.from(expandedAvail);
-                    }
+                    // Grab EXACTLY the slots that are green on the screen
+                    const avail = Array.from(timeCon.querySelectorAll('.available')).map(b => b.getAttribute('data-time'));
                     
                     try {
                         await fetch(`${API_BASE}/providers/schedule`, { 
