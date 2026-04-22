@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =========================================================================
-    // --- 7. SCHEDULE MANAGER LOGIC (STRICT WYSIWYG MODE) ---
+    // --- 7. SCHEDULE MANAGER LOGIC (STRICT WYSIWYG WITH AUTO-SYNC) ---
     // What the provider clicks is EXACTLY what is saved and shown to patients.
     // =========================================================================
     async function loadScheduleManager() {
@@ -357,8 +357,28 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        // 🚨 THE FIX: Auto-Sync when changing duration dropdown!
         const durSelect = document.getElementById('slot-duration-select');
-        if(durSelect) durSelect.addEventListener('change', () => renderTimes(activeDay));
+        if(durSelect) {
+            durSelect.addEventListener('change', async () => {
+                // 1. Redraw the screen to show the new layout
+                await renderTimes(activeDay);
+                
+                // 2. Automatically grab ONLY the green slots visible right now
+                const avail = Array.from(timeCon.querySelectorAll('.available')).map(b => b.getAttribute('data-time'));
+                
+                // 3. Force the database to overwrite itself and delete hidden slots
+                try {
+                    await fetch(`${API_BASE}/providers/schedule`, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+                        body: JSON.stringify({ day: activeDay, slots: avail }) 
+                    });
+                } catch (e) {
+                    console.error(e);
+                }
+            });
+        }
         
         if(dayBtns.length > 0) { dayBtns[0].classList.add('active'); renderTimes('Monday'); }
     }
