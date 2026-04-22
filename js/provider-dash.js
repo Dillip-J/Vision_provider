@@ -279,8 +279,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =========================================================================
-    // --- 7. SCHEDULE MANAGER LOGIC (THE "STATE-DRIVEN" FIX) ---
-    // Memory-based slot saving to prevent hidden slots from being deleted.
+    // --- 7. SCHEDULE MANAGER LOGIC (STRICT WYSIWYG MODE) ---
+    // What the provider clicks is EXACTLY what is saved and shown to patients.
     // =========================================================================
     async function loadScheduleManager() {
         if (providerType === 'Pharmacy') return;
@@ -294,86 +294,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const renderTimes = async (day) => {
             timeCon.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">Loading slots...</div>';
-            
-            // 🚨 TRUE SOURCE OF TRUTH: Fetch exact DB array into memory
-            let currentSavedSlots = [];
+            let saved = [];
             try {
                 const res = await fetch(`${API_BASE}/providers/schedule/${day}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if(res.ok) { const data = await res.json(); currentSavedSlots = data.slots || []; }
+                if(res.ok) { const data = await res.json(); saved = data.slots || []; }
             } catch (err) {}
 
-            const drawGrid = () => {
-                const durationSelect = document.getElementById('slot-duration-select');
-                const duration = durationSelect ? parseInt(durationSelect.value) : 60;
-                
-                const times = [];
-                for (let h = 9; h <= 17; h++) {
-                    for (let m = 0; m < 60; m += duration) {
-                        if (h === 17 && m > 0) break; 
-                        let hr = h > 12 ? h - 12 : (h === 0 ? 12 : h);
-                        const timeString = `${hr < 10 ? '0'+hr : hr}:${m === 0 ? '00' : m} ${h >= 12 ? 'PM' : 'AM'}`;
-                        times.push(timeString);
-                    }
+            const durationSelect = document.getElementById('slot-duration-select');
+            const duration = durationSelect ? parseInt(durationSelect.value) : 60;
+            
+            const times = [];
+            for (let h = 9; h <= 17; h++) {
+                for (let m = 0; m < 60; m += duration) {
+                    if (h === 17 && m > 0) break; 
+                    let hr = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+                    const timeString = `${hr < 10 ? '0'+hr : hr}:${m === 0 ? '00' : m} ${h >= 12 ? 'PM' : 'AM'}`;
+                    times.push(timeString);
                 }
+            }
 
-                timeCon.innerHTML = times.map(t => {
-                    let isAvail = false;
-                    if (duration === 60) {
-                        // In 1-Hour view, a slot is ONLY Green if BOTH 30-min chunks exist in memory
-                        const halfHour = t.replace(':00', ':30');
-                        isAvail = currentSavedSlots.includes(t) && currentSavedSlots.includes(halfHour);
-                    } else {
-                        // In 30-Min view, it's just a direct check
-                        isAvail = currentSavedSlots.includes(t);
-                    }
+            timeCon.innerHTML = times.map(t => {
+                // EXACT match only. No hidden memory arrays.
+                const isAvail = saved.includes(t);
+                
+                return `<button class="btn-time-slot ${isAvail ? 'available' : ''}" data-time="${t}">
+                            ${isAvail ? '<i class="fa-solid fa-check-circle"></i>' : '<i class="fa-solid fa-ban"></i>'} ${t}
+                        </button>`;
+            }).join('');
 
-                    return `<button class="btn-time-slot ${isAvail ? 'available' : ''}" data-time="${t}">
-                                ${isAvail ? '<i class="fa-solid fa-check-circle"></i>' : '<i class="fa-solid fa-ban"></i>'} ${t}
-                            </button>`;
-                }).join('');
-
-                timeCon.querySelectorAll('.btn-time-slot').forEach(btn => {
-                    btn.addEventListener('click', async function() {
-                        const clickedTime = this.getAttribute('data-time');
-                        const isCurrentlyAvail = this.classList.contains('available');
-                        const turningOn = !isCurrentlyAvail;
+            timeCon.querySelectorAll('.btn-time-slot').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    this.classList.toggle('available');
+                    
+                    // Grab EXACTLY the green slots currently visible on the screen
+                    const avail = Array.from(timeCon.querySelectorAll('.available')).map(b => b.getAttribute('data-time'));
+                    
+                    try {
+                        await fetch(`${API_BASE}/providers/schedule`, { 
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+                            body: JSON.stringify({ day: day, slots: avail }) 
+                        });
                         
-                        // 🚨 SMART MEMORY: Update the array logically without looking at the screen!
-                        if (duration === 60) {
-                            const halfHour = clickedTime.replace(':00', ':30');
-                            if (turningOn) {
-                                if (!currentSavedSlots.includes(clickedTime)) currentSavedSlots.push(clickedTime);
-                                if (!currentSavedSlots.includes(halfHour)) currentSavedSlots.push(halfHour);
-                            } else {
-                                currentSavedSlots = currentSavedSlots.filter(s => s !== clickedTime && s !== halfHour);
-                            }
-                        } else {
-                            if (turningOn) {
-                                if (!currentSavedSlots.includes(clickedTime)) currentSavedSlots.push(clickedTime);
-                            } else {
-                                currentSavedSlots = currentSavedSlots.filter(s => s !== clickedTime);
-                            }
-                        }
-                        
-                        // Visually update the UI instantly
-                        drawGrid();
-                        
-                        // Save the full memory array to the database silently
-                        try {
-                            await fetch(`${API_BASE}/providers/schedule`, { 
-                                method: 'POST', 
-                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-                                body: JSON.stringify({ day: day, slots: currentSavedSlots }) 
-                            });
-                        } catch (e) {
-                            console.error("Sync error");
-                        }
-                    });
+                        this.innerHTML = this.classList.contains('available') 
+                            ? `<i class="fa-solid fa-check-circle"></i> ${this.getAttribute('data-time')}` 
+                            : `<i class="fa-solid fa-ban"></i> ${this.getAttribute('data-time')}`;
+                    } catch (e) { 
+                        this.classList.toggle('available'); 
+                    } 
                 });
-            };
-
-            // Draw the grid for the first time
-            drawGrid();
+            });
         };
 
         let activeDay = 'Monday';
