@@ -448,10 +448,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const stat = (b.status || b.booking_status || '').toLowerCase();
             return stat === 'completed';
         });
+
+        // 🚨 THE FIX: A smart function to dig into the object and find the real price
+        const getBookingPrice = (b) => {
+            if (b.total_amount) return parseFloat(b.total_amount);
+            if (b.price) return parseFloat(b.price);
+            
+            // Dig into the provider profile if attached
+            if (b.provider) {
+                if (b.provider.consultation_fee) return parseFloat(b.provider.consultation_fee);
+                if (b.provider.consultationFee) return parseFloat(b.provider.consultationFee);
+                if (b.provider.price) return parseFloat(b.provider.price);
+            }
+            
+            // Absolute fallback if everything is blank
+            return 500;
+        };
         
         let realLifetimeEarnings = 0;
         completedBookings.forEach(b => {
-            realLifetimeEarnings += (b.price || b.total_amount || 500); 
+            realLifetimeEarnings += getBookingPrice(b); // 🚨 Now using the smart function!
         });
 
         const financials = { 
@@ -501,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div><span class="tx-name">${patientName}</span><span class="tx-detail">${bookingId}</span></div>
                 </div>
                 <div class="tx-right">
-                    <span class="tx-amount">+ ₹${formatMoney(b.price || b.total_amount || 500)}</span>
+                    <span class="tx-amount">+ ₹${formatMoney(getBookingPrice(b))}</span> 
                     <br>
                     <span class="status-badge completed" style="display: inline-block; margin-top: 4px;">PAID ONLINE</span>
                 </div>
