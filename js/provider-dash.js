@@ -357,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // 🚨 THE FIX: Auto-Sync when changing duration dropdown!
+        // Auto-Sync when changing duration dropdown!
         const durSelect = document.getElementById('slot-duration-select');
         if(durSelect) {
             durSelect.addEventListener('change', async () => {
@@ -766,9 +766,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =========================================================================
-    // --- 13. UPLOAD/COMPLETION MODAL LOGIC (FILE UPLOAD PIPELINE) ---
-    // Handles the two-step process: Uploads the file, gets the URL, then 
-    // updates the booking status with the notes AND the URL.
+    // --- 13. UPLOAD/COMPLETION MODAL LOGIC (MVP - NO FILE UPLOAD) ---
+    // Updates the booking status with the notes only.
     // =========================================================================
     const modal = document.getElementById('upload-modal');
     window.openUploadModal = function(id, name) {
@@ -812,7 +811,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const id = document.getElementById('record-booking-id').value;
             const notes = document.getElementById('record-notes').value;
-            const fileInput = document.getElementById('record-file'); 
+            // const fileInput = document.getElementById('record-file'); <-- Disabled for MVP
             
             const btn = e.target.querySelector('button');
             btn.textContent = "Processing..."; btn.disabled = true;
@@ -820,14 +819,14 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 let finalReportUrl = null;
 
-                // Step 1: Upload the file if one was selected
+                /* 🚨 TEMPORARILY DISABLED REPORT UPLOADS FOR MVP 
                 if (fileInput && fileInput.files.length > 0) {
                     const fd = new FormData();
                     fd.append("file", fileInput.files[0]);
                     
                     const fileRes = await fetch(`${API_BASE}/files/booking/report`, {
                         method: "POST",
-                        headers: { 'Authorization': `Bearer ${token}` }, // Note: No Content-Type header for FormData!
+                        headers: { 'Authorization': `Bearer ${token}` },
                         body: fd
                     });
                     
@@ -835,8 +834,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const fileData = await fileRes.json();
                     finalReportUrl = fileData.url;
                 }
+                */
 
-                // Step 2: Push the text notes and the file link to the database
+                // Step 2: Push the text notes to the database
                 await fetch(`${API_BASE}/providers/bookings/${id}/status`, { 
                     method: 'PATCH', 
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
@@ -848,7 +848,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if(modal) modal.classList.add('hidden'); 
-                if(fileInput) fileInput.value = ''; 
+                // if(fileInput) fileInput.value = ''; <-- Disabled for MVP
                 loadAppointments(); 
 
             } catch(error) {
