@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
   
     // =========================================================================
     // --- 1. AUTHENTICATION & SESSION CHECK ---
-    // Protects the dashboard. If no token exists, boots user to login screen.
     // =========================================================================
     const token = localStorage.getItem('provider_token');
     const currentProviderString = localStorage.getItem('currentProvider'); 
@@ -23,11 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return; 
     }
 
-    // Force strict Doctor terminology
     const providerName = currentProvider.name || "Doctor";
 
     // =========================================================================
-    // --- 2. HEADER & UI INITIALIZATION (BULLETPROOF IMAGES) ---
+    // --- 2. HEADER & UI INITIALIZATION ---
     // =========================================================================
     const headerImg = document.getElementById("header-profile-img");
     const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(providerName)}&background=1E293B&color=fff&size=128`;
@@ -57,18 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabRec = document.getElementById('tab-records');
     const tabSched = document.getElementById('tab-schedule');
     const tabProf = document.getElementById('tab-profile');
-    const tabCat = document.getElementById('tab-catalog');
-
-    const catTitle = document.getElementById('catalog-title');
-    const catSubtitle = document.getElementById('catalog-subtitle');
-    const catModalTitle = document.getElementById('catalog-modal-title');
-    const catNameLabel = document.getElementById('cat-name-label');
-
-    // Hardcode Doctor UI text
-    if(catTitle) catTitle.textContent = "Consultation Types";
-    if(catSubtitle) catSubtitle.textContent = "Manage the specific consultations you offer.";
-    if(catModalTitle) catModalTitle.textContent = "Add Consultation";
-    if(catNameLabel) catNameLabel.textContent = "Consultation Name (e.g. Video Follow-up)";
 
     const themeBtn = document.getElementById('theme-toggle');
     const themeIcon = document.getElementById('theme-icon');
@@ -99,8 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         schedule: { btn: tabSched, view: document.getElementById('view-schedule'), render: loadScheduleManager },
         records: { btn: tabRec, view: document.getElementById('view-records'), render: renderPatientRecords },
         earnings: { btn: document.getElementById('tab-earnings'), view: document.getElementById('view-earnings'), render: renderEarnings },
-        profile: { btn: tabProf, view: document.getElementById('view-profile'), render: loadProfileSettings },
-        catalog: { btn: tabCat, view: document.getElementById('view-catalog'), render: loadCatalog }
+        profile: { btn: tabProf, view: document.getElementById('view-profile'), render: loadProfileSettings }
     };
 
     function switchTab(tabKey) {
@@ -125,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(tabs[key].btn) tabs[key].btn.addEventListener('click', (e) => { e.preventDefault(); switchTab(key); });
     });
 
-
     // =========================================================================
     // --- 5. MASTER DASHBOARD DATA FETCHER ---
     // =========================================================================
@@ -146,7 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return { items: [], financials: { lifetime_earnings: 0, this_month_earnings: 0 } }; 
         }
     }
-
 
     // =========================================================================
     // --- 6. APPOINTMENTS / ORDERS VIEW LOGIC ---
@@ -241,7 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
-
     // =========================================================================
     // --- 7. SCHEDULE MANAGER LOGIC (STRICT 45-MIN SLOTS) ---
     // =========================================================================
@@ -322,7 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
     // =========================================================================
     // --- 8. PATIENT RECORDS / HISTORY LOGIC ---
     // =========================================================================
@@ -367,9 +348,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
-
     // =========================================================================
-    // --- 9. EARNINGS & TRANSACTIONS LOGIC (BULLETPROOF PRICE TRACKING) ---
+    // --- 9. EARNINGS & TRANSACTIONS LOGIC ---
     // =========================================================================
     async function renderEarnings() {
         const listEl = document.getElementById('transactions-list');
@@ -389,17 +369,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return stat === 'completed';
         });
 
-        let catalogBasePrice = 500; 
-        try {
-            const catRes = await fetch(`${API_BASE}/providers/services/me`, { headers: { 'Authorization': `Bearer ${token}` } });
-            if (catRes.ok) {
-                const catalogItems = await catRes.json();
-                if (catalogItems && catalogItems.length > 0) {
-                    catalogBasePrice = parseFloat(catalogItems[0].price) || 500;
-                }
-            }
-        } catch (e) {
-            console.warn("Could not fetch catalog for pricing.");
+        // Use the global profile price as default fallback
+        let basePrice = 500; 
+        if (currentProvider && currentProvider.consultation_fee != null) {
+             basePrice = parseFloat(currentProvider.consultation_fee);
+        } else if (currentProvider && currentProvider.consultationFee != null) {
+             basePrice = parseFloat(currentProvider.consultationFee);
         }
 
         const getBookingPrice = (b) => {
@@ -407,19 +382,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (b.amount != null) return parseFloat(b.amount);
             if (b.price != null) return parseFloat(b.price);
             
-            if (b.service && b.service.price != null) return parseFloat(b.service.price);
-            
             if (b.provider) {
                 if (b.provider.consultation_fee != null) return parseFloat(b.provider.consultation_fee);
                 if (b.provider.consultationFee != null) return parseFloat(b.provider.consultationFee);
             }
             
-            if (currentProvider) {
-                if (currentProvider.consultation_fee != null) return parseFloat(currentProvider.consultation_fee);
-                if (currentProvider.consultationFee != null) return parseFloat(currentProvider.consultationFee);
-            }
-            
-            return catalogBasePrice; 
+            return basePrice; 
         };
         
         let realLifetimeEarnings = 0;
@@ -482,7 +450,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }).join('');
     }
-
 
     // =========================================================================
     // --- 10. PROFILE SETTINGS LOGIC ---
@@ -583,114 +550,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
     // =========================================================================
-    // --- 11. SERVICES CATALOG LOGIC ---
-    // =========================================================================
-    async function loadCatalog() {
-        const listEl = document.getElementById('catalog-list');
-        if(!listEl) return;
-        listEl.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">Loading catalog...</div>';
-
-        try {
-            const res = await fetch(`${API_BASE}/providers/services/me`, { headers: { 'Authorization': `Bearer ${token}` } });
-            
-            if (res.status === 401) {
-                localStorage.clear();
-                window.location.replace('index.html');
-                return;
-            }
-            if (!res.ok) throw new Error("Failed to load catalog");
-            const items = await res.json();
-
-            if (items.length === 0) {
-                listEl.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">Your catalog is empty. Add consultations to start receiving specific orders.</div>`;
-                return;
-            }
-
-            listEl.innerHTML = items.map(item => {
-                let name = item.service_name || item.test_name || "Unknown Item";
-                let price = item.price;
-                let desc = item.description || item.custom_description || "No description provided.";
-                let itemId = item.service_id || item.test_id || item.inventory_id || item.offering_id || item.id;
-
-                return `
-                    <div class="dash-card">
-                        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom: 12px;">
-                            <h3 style="margin:0; font-size:1.1rem; color:var(--brand-blue);">${name}</h3>
-                            <strong style="color:var(--success-green); font-size:1.1rem;">₹${price}</strong>
-                        </div>
-                        <p style="font-size:0.9rem; color:var(--text-secondary); margin-top:0;">${desc}</p>
-                        
-                        <div style="display:flex; justify-content:flex-end; align-items:center; margin-top: 10px;">
-                            <button onclick="deleteCatalogItem(${itemId})" style="color: #EF4444; background: none; border: none; cursor: pointer; font-size: 0.9rem; padding: 5px;">
-                                <i class="fa-solid fa-trash"></i> Delete
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        } catch (e) {
-            listEl.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1; color: #EF4444;">Error loading catalog.</div>`;
-        }
-    }
-
-    const catalogForm = document.getElementById('form-catalog-add');
-    if (catalogForm) {
-        catalogForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
-            btn.disabled = true;
-
-            let payload = { 
-                price: document.getElementById('cat-price').value,
-                service_name: document.getElementById('cat-name').value,
-                description: document.getElementById('cat-desc').value
-            };
-
-            try {
-                const res = await fetch(`${API_BASE}/providers/services`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify(payload)
-                });
-                
-                if (!res.ok) {
-                    const errData = await res.json();
-                    throw new Error(errData.detail || "Failed to add item");
-                }
-
-                const catModal = document.getElementById('catalog-modal');
-                if(catModal) catModal.classList.add('hidden');
-                
-                catalogForm.reset();
-                loadCatalog(); 
-
-            } catch (err) {
-                alert(err.message);
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
-        });
-    }
-
-    const openCatBtn = document.getElementById('open-catalog-btn');
-    const closeCatBtn = document.getElementById('close-catalog-btn');
-    const catModal = document.getElementById('catalog-modal');
-
-    if (openCatBtn && catModal) {
-        openCatBtn.addEventListener('click', () => catModal.classList.remove('hidden'));
-    }
-    if (closeCatBtn && catModal) {
-        closeCatBtn.addEventListener('click', () => catModal.classList.add('hidden'));
-    }
-
-
-    // =========================================================================
-    // --- 12. GLOBAL ACTIONS ---
+    // --- 11. GLOBAL ACTIONS ---
     // =========================================================================
     window.updateBookingStatus = async function(id, status) {
         const confirmMsg = status === 'canceled' ? "Cancel this due to an emergency?" : `Mark as ${status}?`;
@@ -705,9 +566,8 @@ document.addEventListener('DOMContentLoaded', () => {
         alert("Video consultations are currently disabled.");
     };
 
-
     // =========================================================================
-    // --- 13. COMPLETION MODAL LOGIC (PURE TEXT NOTES) ---
+    // --- 12. COMPLETION MODAL LOGIC (PURE TEXT NOTES) ---
     // =========================================================================
     const modal = document.getElementById('upload-modal');
     window.openUploadModal = function(id, name) {
@@ -771,9 +631,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-
     // =========================================================================
-    // --- 14. PROFILE PHOTO UPLOAD LOGIC ---
+    // --- 13. PROFILE PHOTO UPLOAD LOGIC ---
     // =========================================================================
     function setupDocumentUpload() {
         const fileInput = document.getElementById("profile-photo-input");
@@ -826,9 +685,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
     // =========================================================================
-    // --- 15. LOGOUT AND INITIALIZATION ---
+    // --- 14. LOGOUT AND INITIALIZATION ---
     // =========================================================================
     const logout = (e) => { 
         e.preventDefault(); 
@@ -842,24 +700,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if(mobileLogout) mobileLogout.addEventListener('click', logout);
 
     switchTab('appointments');
-
-
-    // =========================================================================
-    // --- 16. GLOBAL DELETE CATALOG ITEM ---
-    // =========================================================================
-    window.deleteCatalogItem = async function(itemId) {
-        if (!confirm("Are you sure you want to delete this service?")) return;
-        
-        try {
-            const res = await fetch(`${API_BASE}/providers/services/${itemId}`, { 
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` } 
-            });
-            
-            if (!res.ok) throw new Error("Failed to delete item.");
-            loadCatalog(); 
-        } catch (e) {
-            alert(e.message);
-        }
-    };
 });
