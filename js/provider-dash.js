@@ -23,13 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return; 
     }
 
-    const providerType = currentProvider.type || "Doctor"; 
-    const providerName = currentProvider.name || "Provider";
-
+    // Force strict Doctor terminology
+    const providerName = currentProvider.name || "Doctor";
 
     // =========================================================================
     // --- 2. HEADER & UI INITIALIZATION (BULLETPROOF IMAGES) ---
-    // Ensures profile images load whether they are absolute URLs or local paths.
     // =========================================================================
     const headerImg = document.getElementById("header-profile-img");
     const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(providerName)}&background=1E293B&color=fff&size=128`;
@@ -49,57 +47,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const welcomeEl = document.getElementById('welcome-message');
     const clinicEl = document.getElementById('clinic-name');
-    if(welcomeEl) welcomeEl.textContent = providerType === 'Doctor' ? `Dr. ${providerName.replace('Dr. ', '')}` : providerName;
-    if(clinicEl) clinicEl.textContent = `${currentProvider.category || "General"} • ${providerType}`;
-
+    if(welcomeEl) welcomeEl.textContent = `Dr. ${providerName.replace('Dr. ', '')}`;
+    if(clinicEl) clinicEl.textContent = `${currentProvider.category || "General Practitioner"} • Doctor`;
 
     // =========================================================================
-    // --- 3. DYNAMIC DASHBOARD CONFIGURATION ---
-    // Changes terminology depending on if the user is a Lab, Pharmacy, or Doctor.
+    // --- 3. DYNAMIC DASHBOARD CONFIGURATION (DOCTOR ONLY) ---
     // =========================================================================
     const tabApt = document.getElementById('tab-appointments');
     const tabRec = document.getElementById('tab-records');
     const tabSched = document.getElementById('tab-schedule');
     const tabProf = document.getElementById('tab-profile');
     const tabCat = document.getElementById('tab-catalog');
-    const pendingTitle = document.getElementById('pending-title');
 
     const catTitle = document.getElementById('catalog-title');
     const catSubtitle = document.getElementById('catalog-subtitle');
     const catModalTitle = document.getElementById('catalog-modal-title');
     const catNameLabel = document.getElementById('cat-name-label');
-    const catDescLabel = document.getElementById('cat-desc-label');
 
-    if (providerType === 'Lab') {
-        if(tabApt) tabApt.innerHTML = '<i class="fa-solid fa-flask"></i> Lab Test Orders';
-        if(tabRec) tabRec.innerHTML = '<i class="fa-solid fa-file-waveform"></i> Uploaded Results';
-        if(pendingTitle) pendingTitle.textContent = "Active Lab Orders";
-        if(catTitle) catTitle.textContent = "Lab Tests";
-        if(catSubtitle) catSubtitle.textContent = "Manage the tests you can perform.";
-        if(catModalTitle) catModalTitle.textContent = "Add Lab Test";
-        if(catNameLabel) catNameLabel.textContent = "Test Name (e.g. Complete Blood Count)";
-        if(catDescLabel) catDescLabel.textContent = "Preparation Rules (e.g. Fasting required)";
-        const homeColGroup = document.getElementById('home-col-checkbox-group');
-        if(homeColGroup) homeColGroup.classList.remove('hidden');
-
-    } else if (providerType === 'Pharmacy') {
-        if(tabApt) tabApt.innerHTML = '<i class="fa-solid fa-pills"></i> Medicine Orders';
-        if(tabRec) tabRec.innerHTML = '<i class="fa-solid fa-receipt"></i> Delivery History';
-        if(pendingTitle) pendingTitle.textContent = "Active Deliveries";
-        if(tabSched) tabSched.classList.add('hidden'); 
-        if(catTitle) catTitle.textContent = "Medicine Inventory";
-        if(catSubtitle) catSubtitle.textContent = "Manage the drugs and items you sell.";
-        if(catModalTitle) catModalTitle.textContent = "Add Medicine";
-        if(catNameLabel) catNameLabel.textContent = "Medicine / Item Name";
-        const rxGroup = document.getElementById('rx-checkbox-group');
-        if(rxGroup) rxGroup.classList.remove('hidden');
-
-    } else {
-        if(catTitle) catTitle.textContent = "Consultation Types";
-        if(catSubtitle) catSubtitle.textContent = "Manage the specific consultations you offer.";
-        if(catModalTitle) catModalTitle.textContent = "Add Consultation";
-        if(catNameLabel) catNameLabel.textContent = "Consultation Name (e.g. Video Follow-up)";
-    }
+    // Hardcode Doctor UI text
+    if(catTitle) catTitle.textContent = "Consultation Types";
+    if(catSubtitle) catSubtitle.textContent = "Manage the specific consultations you offer.";
+    if(catModalTitle) catModalTitle.textContent = "Add Consultation";
+    if(catNameLabel) catNameLabel.textContent = "Consultation Name (e.g. Video Follow-up)";
 
     const themeBtn = document.getElementById('theme-toggle');
     const themeIcon = document.getElementById('theme-icon');
@@ -124,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // =========================================================================
     // --- 4. TAB NAVIGATION LOGIC ---
-    // Manages hiding/showing views when sidebar buttons are clicked.
     // =========================================================================
     const tabs = {
         appointments: { btn: tabApt, view: document.getElementById('view-appointments'), render: loadAppointments },
@@ -160,7 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // =========================================================================
     // --- 5. MASTER DASHBOARD DATA FETCHER ---
-    // Pulls all appointments and provider data from FastAPI.
     // =========================================================================
     async function fetchMyDashboard() {
         try {
@@ -183,7 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // =========================================================================
     // --- 6. APPOINTMENTS / ORDERS VIEW LOGIC ---
-    // Generates the pending and active booking cards.
     // =========================================================================
     async function loadAppointments() {
         const listEl = document.getElementById('provider-appointments-list');
@@ -211,10 +177,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const statsEl = document.getElementById('provider-stats');
         if(statsEl) {
-            let metricName = providerType === 'Pharmacy' ? 'Orders' : (providerType === 'Lab' ? 'Tests' : 'Patients');
             statsEl.innerHTML = `
                 <div class="stat-card">
-                    <div class="stat-info"><span>Total ${metricName}</span><strong>${myBookings.length}</strong></div>
+                    <div class="stat-info"><span>Total Patients</span><strong>${myBookings.length}</strong></div>
                     <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
                 </div>
                 <div class="stat-card">
@@ -248,14 +213,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 btns += `<button class="btn-primary" onclick="updateBookingStatus('${bookingId}', 'confirmed')"><i class="fa-solid fa-thumbs-up"></i> Accept</button>`;
                 btns += `<button class="btn-outline red" onclick="updateBookingStatus('${bookingId}', 'rejected')"><i class="fa-solid fa-xmark"></i> Reject</button>`;
             } else {
-                if (isOnline && providerType === 'Doctor') {
+                if (isOnline) {
                     btns += `<button class="btn-primary green" onclick="joinSecureVideoCall('${bookingId}')"><i class="fa-solid fa-video"></i> Join Call</button>`;
                 }
                 btns += `<button class="btn-outline purple" onclick="openUploadModal('${bookingId}', '${patientName}')"><i class="fa-solid fa-check-double"></i> Complete</button>`;
                 btns += `<button class="btn-outline red" onclick="updateBookingStatus('${bookingId}', 'canceled')"><i class="fa-solid fa-triangle-exclamation"></i> Cancel</button>`;
             }
 
-            let notesLabel = providerType === 'Pharmacy' ? "Order Details" : (providerType === 'Lab' ? "Lab Tests" : "Symptoms");
             let displayStatus = aptStatus === 'pending' ? 'NEEDS APPROVAL' : 'CONFIRMED';
             let statusClass = aptStatus === 'pending' ? 'pending' : 'completed';
 
@@ -266,10 +230,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="status-badge ${statusClass}">${displayStatus}</span>
                     </div>
                     <div class="apt-info"><strong>ID:</strong> ${bookingId} | <i class="fa-solid fa-phone"></i> ${aptPhone}</div>
-                    <div class="apt-symptoms"><strong><i class="fa-solid fa-notes-medical"></i> ${notesLabel}:</strong> ${aptSymptoms}</div>
+                    <div class="apt-symptoms"><strong><i class="fa-solid fa-notes-medical"></i> Symptoms:</strong> ${aptSymptoms}</div>
                     <div class="apt-meta">
                         <div><i class="fa-regular fa-clock text-blue"></i> ${apt.time || apt.scheduled_time || 'ASAP'}</div>
-                        <div><i class="fa-solid ${isOnline ? 'fa-video' : (providerType === 'Pharmacy' ? 'fa-motorcycle' : 'fa-location-dot')}"></i> ${visitType} ${!isOnline ? `(${apt.address || apt.delivery_address || 'Clinic'})` : ''}</div>
+                        <div><i class="fa-solid ${isOnline ? 'fa-video' : 'fa-location-dot'}"></i> ${visitType} ${!isOnline ? `(${apt.address || apt.delivery_address || 'Clinic'})` : ''}</div>
                     </div>
                     <div class="apt-actions">${btns}</div>
                 </div>
@@ -279,12 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =========================================================================
-    // --- 7. SCHEDULE MANAGER LOGIC (STRICT WYSIWYG WITH AUTO-SYNC) ---
-    // What the provider clicks is EXACTLY what is saved and shown to patients.
+    // --- 7. SCHEDULE MANAGER LOGIC (STRICT 45-MIN SLOTS) ---
     // =========================================================================
     async function loadScheduleManager() {
-        if (providerType === 'Pharmacy') return;
-
         const dateCon = document.getElementById('provider-date-container');
         const timeCon = document.getElementById('provider-time-container');
         if (!dateCon || !timeCon) return;
@@ -300,23 +261,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(res.ok) { const data = await res.json(); saved = data.slots || []; }
             } catch (err) {}
 
-            const durationSelect = document.getElementById('slot-duration-select');
-            const duration = durationSelect ? parseInt(durationSelect.value) : 60;
-            
             const times = [];
-            for (let h = 9; h <= 17; h++) {
-                for (let m = 0; m < 60; m += duration) {
-                    if (h === 17 && m > 0) break; 
-                    let hr = h > 12 ? h - 12 : (h === 0 ? 12 : h);
-                    const timeString = `${hr < 10 ? '0'+hr : hr}:${m === 0 ? '00' : m} ${h >= 12 ? 'PM' : 'AM'}`;
-                    times.push(timeString);
-                }
+            const startMins = 9 * 60; 
+            const endMins = 17 * 60;  
+            const duration = 45;      
+
+            for (let m = startMins; m < endMins; m += duration) {
+                let hours = Math.floor(m / 60);
+                let mins = m % 60;
+                let modifier = hours >= 12 ? 'PM' : 'AM';
+                let displayHours = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
+                
+                const timeString = `${displayHours < 10 ? '0'+displayHours : displayHours}:${mins === 0 ? '00' : mins} ${modifier}`;
+                times.push(timeString);
             }
 
             timeCon.innerHTML = times.map(t => {
-                // EXACT match only. No hidden memory arrays.
                 const isAvail = saved.includes(t);
-                
                 return `<button class="btn-time-slot ${isAvail ? 'available' : ''}" data-time="${t}">
                             ${isAvail ? '<i class="fa-solid fa-check-circle"></i>' : '<i class="fa-solid fa-ban"></i>'} ${t}
                         </button>`;
@@ -325,8 +286,6 @@ document.addEventListener('DOMContentLoaded', () => {
             timeCon.querySelectorAll('.btn-time-slot').forEach(btn => {
                 btn.addEventListener('click', async function() {
                     this.classList.toggle('available');
-                    
-                    // Grab EXACTLY the green slots currently visible on the screen
                     const avail = Array.from(timeCon.querySelectorAll('.available')).map(b => b.getAttribute('data-time'));
                     
                     try {
@@ -357,31 +316,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Auto-Sync when changing duration dropdown!
-        const durSelect = document.getElementById('slot-duration-select');
-        if(durSelect) {
-            durSelect.addEventListener('change', async () => {
-                // 1. Redraw the screen to show the new layout
-                await renderTimes(activeDay);
-                
-                // 2. Automatically grab ONLY the green slots visible right now
-                const avail = Array.from(timeCon.querySelectorAll('.available')).map(b => b.getAttribute('data-time'));
-                
-                // 3. Force the database to overwrite itself and delete hidden slots
-                try {
-                    await fetch(`${API_BASE}/providers/schedule`, { 
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-                        body: JSON.stringify({ day: activeDay, slots: avail }) 
-                    });
-                } catch (e) {
-                    console.error(e);
-                }
-            });
+        if(dayBtns.length > 0) { 
+            dayBtns[0].classList.add('active'); 
+            renderTimes('Monday'); 
         }
-        
-        if(dayBtns.length > 0) { dayBtns[0].classList.add('active'); renderTimes('Monday'); }
     }
+
+
     // =========================================================================
     // --- 8. PATIENT RECORDS / HISTORY LOGIC ---
     // =========================================================================
@@ -405,9 +346,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if(done.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No records found.</td></tr>`; return; }
 
-        let notesHeader = providerType === 'Pharmacy' ? 'Delivery Remarks' : 'Clinical Notes';
         const thNotes = document.querySelector('.records-table th:nth-child(4)');
-        if(thNotes) thNotes.textContent = notesHeader;
+        if(thNotes) thNotes.textContent = 'Clinical Notes';
 
         tbody.innerHTML = done.map(apt => {
             const patientName = apt.client_name || apt.patient_name || apt.user_name || "Unknown Patient";
@@ -429,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =========================================================================
-    // --- 9. EARNINGS & TRANSACTIONS LOGIC ---
+    // --- 9. EARNINGS & TRANSACTIONS LOGIC (BULLETPROOF PRICE TRACKING) ---
     // =========================================================================
     async function renderEarnings() {
         const listEl = document.getElementById('transactions-list');
@@ -449,25 +389,42 @@ document.addEventListener('DOMContentLoaded', () => {
             return stat === 'completed';
         });
 
-        // 🚨 THE FIX: A smart function to dig into the object and find the real price
+        let catalogBasePrice = 500; 
+        try {
+            const catRes = await fetch(`${API_BASE}/providers/services/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (catRes.ok) {
+                const catalogItems = await catRes.json();
+                if (catalogItems && catalogItems.length > 0) {
+                    catalogBasePrice = parseFloat(catalogItems[0].price) || 500;
+                }
+            }
+        } catch (e) {
+            console.warn("Could not fetch catalog for pricing.");
+        }
+
         const getBookingPrice = (b) => {
-            if (b.total_amount) return parseFloat(b.total_amount);
-            if (b.price) return parseFloat(b.price);
+            if (b.total_amount != null) return parseFloat(b.total_amount);
+            if (b.amount != null) return parseFloat(b.amount);
+            if (b.price != null) return parseFloat(b.price);
             
-            // Dig into the provider profile if attached
+            if (b.service && b.service.price != null) return parseFloat(b.service.price);
+            
             if (b.provider) {
-                if (b.provider.consultation_fee) return parseFloat(b.provider.consultation_fee);
-                if (b.provider.consultationFee) return parseFloat(b.provider.consultationFee);
-                if (b.provider.price) return parseFloat(b.provider.price);
+                if (b.provider.consultation_fee != null) return parseFloat(b.provider.consultation_fee);
+                if (b.provider.consultationFee != null) return parseFloat(b.provider.consultationFee);
             }
             
-            // Absolute fallback if everything is blank
-            return 500;
+            if (currentProvider) {
+                if (currentProvider.consultation_fee != null) return parseFloat(currentProvider.consultation_fee);
+                if (currentProvider.consultationFee != null) return parseFloat(currentProvider.consultationFee);
+            }
+            
+            return catalogBasePrice; 
         };
         
         let realLifetimeEarnings = 0;
         completedBookings.forEach(b => {
-            realLifetimeEarnings += getBookingPrice(b); // 🚨 Now using the smart function!
+            realLifetimeEarnings += getBookingPrice(b); 
         });
 
         const financials = { 
@@ -528,8 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =========================================================================
-    // --- 10. PROFILE SETTINGS LOGIC (REAL-TIME INPUT VALIDATION) ---
-    // Protects database from bad characters and enforces length limits.
+    // --- 10. PROFILE SETTINGS LOGIC ---
     // =========================================================================
     function loadProfileSettings() {
         const nameEl = document.getElementById('prof-name');
@@ -547,8 +503,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(accNoEl) {
             accNoEl.placeholder = "Enter Account Number (9-18 Digits)";
             accNoEl.value = currentProvider.account_number || '';
-            
-            // Instantly destroy any letters/symbols and limit to 18 digits max
             accNoEl.addEventListener('input', function() {
                 this.value = this.value.replace(/[^0-9]/g, '').slice(0, 18);
             });
@@ -557,8 +511,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(ifscEl) {
             ifscEl.placeholder = "Enter IFSC Code (e.g. SBIN0001234)";
             ifscEl.value = currentProvider.ifsc_code || '';
-            
-            // Instantly force uppercase, destroy special chars, and limit to 11 chars
             ifscEl.addEventListener('input', function() {
                 this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 11);
             });
@@ -580,13 +532,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const bankNameVal = document.getElementById('prof-bank-name')?.value;
             if(bankNameVal) payload.bank_name = bankNameVal;
 
-            // Pre-Flight Validation Checks before hitting the database
             const accVal = document.getElementById('prof-acc-no')?.value;
             if(accVal) {
-                if (accVal.length < 9) {
-                    alert("Account Number must be at least 9 digits long.");
-                    return; 
-                }
+                if (accVal.length < 9) { alert("Account Number must be at least 9 digits long."); return; }
                 payload.account_number = accVal;
             }
             
@@ -620,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentProvider = updatedProvider;
                 
                 if(document.getElementById('welcome-message')) {
-                    document.getElementById('welcome-message').textContent = providerType === 'Doctor' ? `Dr. ${currentProvider.name.replace('Dr. ', '')}` : currentProvider.name;
+                    document.getElementById('welcome-message').textContent = `Dr. ${currentProvider.name.replace('Dr. ', '')}`;
                 }
                 
                 alert("Details saved successfully!");
@@ -637,8 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =========================================================================
-    // --- 11. SERVICES CATALOG LOGIC (WITH DELETION FIX) ---
-    // Grabs items from API and dynamically generates the trash can buttons.
+    // --- 11. SERVICES CATALOG LOGIC ---
     // =========================================================================
     async function loadCatalog() {
         const listEl = document.getElementById('catalog-list');
@@ -657,25 +604,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const items = await res.json();
 
             if (items.length === 0) {
-                listEl.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">Your catalog is empty. Add items to start receiving specific orders.</div>`;
+                listEl.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">Your catalog is empty. Add consultations to start receiving specific orders.</div>`;
                 return;
             }
 
             listEl.innerHTML = items.map(item => {
-                let name = item.service_name || item.test_name || (item.medicine ? item.medicine.medicine_name : "Unknown Item");
+                let name = item.service_name || item.test_name || "Unknown Item";
                 let price = item.price;
-                let desc = item.description || item.preparation_rules || item.custom_description || (item.medicine ? item.medicine.description : "No description");
-                
-                // Extract proper ID to allow deletion
+                let desc = item.description || item.custom_description || "No description provided.";
                 let itemId = item.service_id || item.test_id || item.inventory_id || item.offering_id || item.id;
-                
-                let extraTag = '';
-                if(providerType === 'Pharmacy' && item.medicine && item.medicine.requires_prescription) {
-                    extraTag = `<span class="status-badge pending" style="color: #EF4444; background: #FEE2E2;">RX Required</span>`;
-                }
-                if(providerType === 'Lab' && item.home_collection_available) {
-                    extraTag = `<span class="status-badge completed">Home Collection</span>`;
-                }
 
                 return `
                     <div class="dash-card">
@@ -683,10 +620,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             <h3 style="margin:0; font-size:1.1rem; color:var(--brand-blue);">${name}</h3>
                             <strong style="color:var(--success-green); font-size:1.1rem;">₹${price}</strong>
                         </div>
-                        <p style="font-size:0.9rem; color:var(--text-secondary); margin-top:0;">${desc || "No description provided."}</p>
+                        <p style="font-size:0.9rem; color:var(--text-secondary); margin-top:0;">${desc}</p>
                         
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 10px;">
-                            <div>${extraTag}</div>
+                        <div style="display:flex; justify-content:flex-end; align-items:center; margin-top: 10px;">
                             <button onclick="deleteCatalogItem(${itemId})" style="color: #EF4444; background: none; border: none; cursor: pointer; font-size: 0.9rem; padding: 5px;">
                                 <i class="fa-solid fa-trash"></i> Delete
                             </button>
@@ -708,22 +644,11 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
             btn.disabled = true;
 
-            let payload = { price: document.getElementById('cat-price').value };
-
-            if (providerType === 'Doctor') {
-                payload.service_name = document.getElementById('cat-name').value;
-                payload.description = document.getElementById('cat-desc').value;
-            } else if (providerType === 'Pharmacy') {
-                payload.medicine_name = document.getElementById('cat-name').value;
-                payload.description = document.getElementById('cat-desc').value;
-                const rxCheck = document.getElementById('cat-rx-required');
-                if(rxCheck) payload.requires_prescription = rxCheck.checked;
-            } else if (providerType === 'Lab') {
-                payload.test_name = document.getElementById('cat-name').value;
-                payload.description = document.getElementById('cat-desc').value; 
-                const homeColCheck = document.getElementById('cat-home-col');
-                if(homeColCheck) payload.home_collection_available = homeColCheck.checked;
-            }
+            let payload = { 
+                price: document.getElementById('cat-price').value,
+                service_name: document.getElementById('cat-name').value,
+                description: document.getElementById('cat-desc').value
+            };
 
             try {
                 const res = await fetch(`${API_BASE}/providers/services`, {
@@ -782,8 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =========================================================================
-    // --- 13. UPLOAD/COMPLETION MODAL LOGIC (MVP - NO FILE UPLOAD) ---
-    // Updates the booking status with the notes only.
+    // --- 13. COMPLETION MODAL LOGIC (PURE TEXT NOTES) ---
     // =========================================================================
     const modal = document.getElementById('upload-modal');
     window.openUploadModal = function(id, name) {
@@ -799,16 +723,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const titleEl = document.getElementById('modal-dynamic-title');
         
         if (titleEl && noteLabel) {
-            if(providerType === 'Lab') {
-                titleEl.textContent = "Upload Lab Results";
-                noteLabel.textContent = "Test Result Summary *";
-            } else if (providerType === 'Pharmacy') {
-                titleEl.textContent = "Confirm Delivery";
-                noteLabel.textContent = "Delivery Remarks *";
-            } else {
-                titleEl.textContent = "Complete Consultation";
-                noteLabel.textContent = "Clinical Notes / Diagnosis *";
-            }
+            titleEl.textContent = "Complete Consultation";
+            noteLabel.textContent = "Clinical Notes / Diagnosis *";
         }
         if(modal) modal.classList.remove('hidden');
     };
@@ -827,44 +743,23 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const id = document.getElementById('record-booking-id').value;
             const notes = document.getElementById('record-notes').value;
-            // const fileInput = document.getElementById('record-file'); <-- Disabled for MVP
             
             const btn = e.target.querySelector('button');
             btn.textContent = "Processing..."; btn.disabled = true;
 
             try {
-                let finalReportUrl = null;
-
-                /* 🚨 TEMPORARILY DISABLED REPORT UPLOADS FOR MVP 
-                if (fileInput && fileInput.files.length > 0) {
-                    const fd = new FormData();
-                    fd.append("file", fileInput.files[0]);
-                    
-                    const fileRes = await fetch(`${API_BASE}/files/booking/report`, {
-                        method: "POST",
-                        headers: { 'Authorization': `Bearer ${token}` },
-                        body: fd
-                    });
-                    
-                    if (!fileRes.ok) throw new Error("File upload failed.");
-                    const fileData = await fileRes.json();
-                    finalReportUrl = fileData.url;
-                }
-                */
-
-                // Step 2: Push the text notes to the database
+                // Send only text notes to complete the appointment
                 await fetch(`${API_BASE}/providers/bookings/${id}/status`, { 
                     method: 'PATCH', 
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
                     body: JSON.stringify({ 
                         status: 'completed', 
                         notes: notes,
-                        report_url: finalReportUrl 
+                        report_url: null 
                     }) 
                 });
 
                 if(modal) modal.classList.add('hidden'); 
-                // if(fileInput) fileInput.value = ''; <-- Disabled for MVP
                 loadAppointments(); 
 
             } catch(error) {
@@ -879,7 +774,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // =========================================================================
     // --- 14. PROFILE PHOTO UPLOAD LOGIC ---
-    // Uses a hidden file input to instantly upload profile photos.
     // =========================================================================
     function setupDocumentUpload() {
         const fileInput = document.getElementById("profile-photo-input");
@@ -952,7 +846,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // =========================================================================
     // --- 16. GLOBAL DELETE CATALOG ITEM ---
-    // Attached to window so the inline onclick="deleteCatalogItem()" works.
     // =========================================================================
     window.deleteCatalogItem = async function(itemId) {
         if (!confirm("Are you sure you want to delete this service?")) return;
