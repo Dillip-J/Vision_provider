@@ -1,6 +1,7 @@
 // js/provider-auth.js
 document.addEventListener('DOMContentLoaded', () => {
 
+
     // ==========================================
     // --- 0. GLOBAL ROUTING ENGINE ---
     // ==========================================
@@ -55,8 +56,66 @@ document.addEventListener('DOMContentLoaded', () => {
         tabSignup.addEventListener('click', () => switchTab(false));
     }
 
+    // --- 3. Dynamic Form Shape-Shifting ---
+    const typeSelect = document.getElementById('provider-type-select');
+    const nameLabel = document.getElementById('dynamic-name-label');
+    const nameInput = document.getElementById('dynamic-name-input');
+    const licenseLabel = document.getElementById('dynamic-license-label');
+    const licenseInput = document.getElementById('dynamic-license-input');
+    const uploadLabel = document.getElementById('dynamic-upload-label');
+    const catLabel = document.getElementById('dynamic-category-label');
+    const catSelect = document.getElementById('dynamic-category-select');
+    const brandIcon = document.getElementById('dynamic-brand-icon');
+
+    const updateFormUI = () => {
+        const val = typeSelect.value;
+        catSelect.innerHTML = ''; 
+
+        if (val === 'Pharmacy') {
+            brandIcon.className = 'fa-solid fa-pills';
+            nameLabel.textContent = 'Medical Shop Name *';
+            nameInput.placeholder = 'e.g. City Care Pharmacy';
+            licenseLabel.textContent = 'Pharmacy / Drug License No. *';
+            licenseInput.placeholder = 'e.g. DL-12345678';
+            uploadLabel.textContent = 'Upload Pharmacy License & Shop Registration (PDF)';
+            catLabel.textContent = 'Primary Service *';
+            catSelect.innerHTML = `<option value="Medicines">Medicines & Prescription Delivery</option><option value="Medical Equipment">Medical Equipment Sales</option>`;
+        } 
+        else if (val === 'Lab') {
+            brandIcon.className = 'fa-solid fa-flask';
+            nameLabel.textContent = 'Diagnostic Lab Name *';
+            nameInput.placeholder = 'e.g. Precision Diagnostics';
+            licenseLabel.textContent = 'NABL / Clinical Establishment No. *';
+            licenseInput.placeholder = 'e.g. NABL-98765';
+            uploadLabel.textContent = 'Upload Lab Accreditation Certificate (PDF)';
+            catLabel.textContent = 'Test Category *';
+            catSelect.innerHTML = `<option value="Blood Tests">Blood & Pathology Tests</option><option value="Radiology">Radiology (X-Ray/MRI)</option><option value="Full Body">Full Body Checkups</option>`;
+        } 
+        else {
+            brandIcon.className = 'fa-solid fa-user-doctor';
+            nameLabel.textContent = 'Doctor Full Name *';
+            nameInput.placeholder = 'Dr. John Doe';
+            licenseLabel.textContent = 'Medical Council License No. *';
+            licenseInput.placeholder = 'e.g. MCI-12345';
+            uploadLabel.textContent = 'Upload Medical Degree & License (PDF)';
+            catLabel.textContent = 'Specialization *';
+            catSelect.innerHTML = `
+                <option value="General Physician">General Physician</option>
+                <option value="Cardiologist">Cardiologist</option>
+                <option value="Orthopedic">Orthopedic</option>
+                <option value="Pediatrician">Pediatrician</option>
+                <option value="Dermatologist">Dermatologist</option>
+            `;
+        }
+    };
+
+    if (typeSelect) {
+        typeSelect.addEventListener('change', updateFormUI);
+        updateFormUI(); 
+    }
+
     // ==========================================
-    // --- 3. Registration Logic (Doctor Only MVP) ---
+    // --- 4. Registration Logic (WITH GPS CAPTURE) ---
     // ==========================================
     [formLogin, formSignup].forEach(form => {
         if (!form) return;
@@ -80,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
 
             const getProviderLocation = () => {
-                return new Promise((resolve) => {
+                return new Promise((resolve, reject) => {
                     if (!navigator.geolocation) {
                         resolve({ lat: null, lon: null });
                     } else {
@@ -97,12 +156,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const gps = await getProviderLocation();
                 const formData = new FormData();
                 
-                // Hardcoded to Doctor logic for MVP
                 formData.append("name", document.getElementById('dynamic-name-input').value);
                 formData.append("email", document.getElementById('provider-signup-email').value.toLowerCase());
                 formData.append("phone", document.getElementById('provider-signup-phone').value);
                 formData.append("password", document.getElementById('provider-signup-password').value);
-                formData.append("provider_type", "Doctor"); // Strict MVP lock
+                formData.append("provider_type", typeSelect.value); 
                 formData.append("category", document.getElementById('dynamic-category-select').value);
 
                 if (gps.lat && gps.lon) {
@@ -110,13 +168,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append("longitude", gps.lon);
                 }
                 
-                // 🚨 FILE UPLOAD CAPTURE LOGIC
                 const fileInput = document.getElementById('provider-signup-license-file');
                 if (fileInput && fileInput.files.length > 0) {
                     formData.append("license_document", fileInput.files[0]);
-                    console.log("✅ File attached to payload:", fileInput.files[0].name);
-                } else {
-                    console.warn("⚠️ No file found! Check if your HTML input ID is exactly 'provider-signup-license-file'");
                 }
 
                 const response = await fetch(`${API_BASE}/providers/register`, {
@@ -134,9 +188,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                alert(`Registration Success! Your profile is pending Admin approval. You can now log in.`);
+                // Perfect for MVP: Alert success and auto-switch to login tab!
+                alert(`Registration Success! You can now log in.`);
                 switchTab(true); 
                 formSignup.reset();
+                updateFormUI();
 
             } catch (err) {
                 console.error(err);
@@ -149,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // --- 4. Login Logic ---
+    // --- 5. Login Logic ---
     // ==========================================
     if (formLogin) {
         formLogin.addEventListener('submit', async (e) => {
@@ -171,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (response.status === 403) {
-                    alert("Your account is still pending Admin approval.");
+                    alert("Your account is still pending. (Make sure you changed 'status=\"pending\"' to 'status=\"approved\"' in routers/providers.py!)");
                     return;
                 }
 
@@ -196,6 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
 }); 
 
 // ==========================================
