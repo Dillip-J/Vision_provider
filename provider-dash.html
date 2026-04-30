@@ -26,6 +26,191 @@
                 <button class="nav-item" id="tab-records"><i class="fa-solid fa-file-waveform"></i> History</button>
                 <button class="nav-item" id="tab-earnings"><i class="fa-solid fa-wallet"></i> Earnings</button>
                 <button class="nav-item" id="tab-profile"><i class="fa-solid fa-user-gear"></i> Settings</button>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <button id="theme-toggle" class="btn-sidebar-outline"><i class="fa-regular fa-moon" id="theme-icon"></i> Theme</button>
+                <button class="btn-sidebar-outline text-red" id="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            </div>
+        </aside>
+
+        <div class="dash-main">
+            <header class="dash-header">
+                <div class="header-profile-box">
+                    <img id="header-profile-img" src="" alt="Provider Photo">
+                    <div>
+                        <h1 id="welcome-message">Loading...</h1>
+                        <p id="clinic-name">Fetching business details...</p>
+                    </div>
+                </div>
+                <button id="mobile-btn-logout" class="mobile-only-btn text-red"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </header>
+
+            <div class="dash-content">
+                
+                <section id="view-appointments" class="view-section active">
+                    <div class="stats-grid" id="provider-stats"></div>
+                    <h2 id="pending-title">Active Requests</h2>
+                    <div class="list-container" id="provider-appointments-list"></div>
+                </section>
+
+                <section id="view-schedule" class="view-section hidden">
+                    <div class="dash-card">
+                        <h2>Manage Operating Hours</h2>
+                        <p>Block out times your business is opened or available.</p>
+
+                        <h3><i class="fa-regular fa-calendar text-blue"></i> Select Day</h3>
+                        <div class="date-scroll-container" id="provider-date-container"></div>
+                        
+                        <h3><i class="fa-regular fa-clock text-blue"></i> Time Slots (45 Mins)</h3>
+                        <div class="time-grid" id="provider-time-container"></div>
+                    </div>
+                </section>
+
+                <section id="view-records" class="view-section hidden">
+                    <div class="dash-card">
+                        <h2>Completed Records</h2>
+                        <p>Access history and clinical notes securely.</p>
+                        <div class="table-container">
+                            <table class="records-table">
+                                <thead>
+                                    <tr>
+                                        <th>Patient / Client</th>
+                                        <th>Date & Time</th>
+                                        <th>Service Type</th>
+                                        <th>Clinical Notes / Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="records-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="view-earnings" class="view-section hidden">
+                    <h2>Revenue Dashboard</h2>
+                    <p>Track your earnings from completed orders and consults.</p>
+                    <div class="stats-grid" id="earnings-stats"></div>
+                    <h3>Recent Transactions</h3>
+                    <div class="list-container" id="transactions-list"></div>
+                </section>
+
+                <section id="view-profile" class="view-section hidden">
+                    <h2>Settings & Payouts</h2>
+                    <p>Update your public business profile, fees, and bank account.</p>
+
+                    <form id="form-provider-profile" class="mt-24">
+                        <div class="profile-grid">
+                            
+                            <div class="dash-card">
+                                <h3><i class="fa-regular fa-id-card text-blue"></i> Business Information</h3>
+                                
+                                <div class="profile-upload-action">
+                                    <button type="button" class="btn-outline text-blue btn-small" id="btn-trigger-upload">
+                                        <i class="fa-solid fa-camera"></i> Change Photo
+                                    </button>
+                                    <input type="file" id="profile-photo-input" accept="image/*" class="hidden">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Business / Provider Name</label>
+                                    <input type="text" id="prof-name" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Contact Phone</label>
+                                    <input type="text" id="prof-phone" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Consultation Fee (₹) *</label>
+                                    <input type="number" id="prof-fee" class="form-control" required min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Detailed Public Bio / Description</label>
+                                    <textarea id="prof-bio" rows="6" class="form-control" placeholder="List your degrees, specializations, or specific business details..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="dash-card">
+                                <h3><i class="fa-solid fa-building-columns text-green"></i> Bank Details for Payouts</h3>
+                                
+                                <div class="form-group">
+                                    <label>Bank Name</label>
+                                    <input type="text" id="prof-bank-name" class="form-control" placeholder="e.g. HDFC Bank">
+                                </div>
+                                <div class="form-group">
+                                    <label>Account Number</label>
+                                    <input type="text" id="prof-acc-no" class="form-control" placeholder="Enter New Account Number">
+                                </div>
+                                <div class="form-group">
+                                    <label>IFSC / Routing Code</label>
+                                    <input type="text" id="prof-ifsc" class="form-control" placeholder="Enter New IFSC Code">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-right mt-24">
+                            <button type="submit" id="btn-save-profile" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+                        </div>
+                    </form>
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="upload-modal">
+        <div class="modal-container">
+            <button class="modal-close" id="close-upload-btn"><i class="fa-solid fa-xmark"></i></button>
+            <h2 id="modal-dynamic-title">Complete Service</h2>
+            
+            <form id="form-upload-record" class="modal-form">
+                <input type="hidden" id="record-booking-id">
+                <div class="modal-client-box">
+                    <strong>Client: <span id="record-patient-name">...</span></strong>
+                </div>
+                
+                <div class="form-group">
+                    <label id="modal-notes-label">Clinical Notes / Remarks *</label>
+                    <textarea id="record-notes" rows="4" class="form-control" required placeholder="Type the review/notes here..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn-primary btn-block mt-24">Mark Completed</button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="js/config.js"></script>
+    <script src="js/provider-dash.js"></script>
+</body>
+</html>
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vision - Provider Dashboard</title>
+    <link rel="stylesheet" href="css/provider-dashboard.css"> 
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-main">
+
+    <div class="dash-wrapper">
+        <aside class="dash-sidebar">
+            <div class="sidebar-brand">
+                <div class="logo-circle"><i class="fa-solid fa-briefcase-medical"></i></div>
+                <div class="brand-text">
+                    <strong>Vision</strong>
+                    <span>Partner Portal</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <button class="nav-item active" id="tab-appointments"><i class="fa-solid fa-calendar-check"></i> Requests</button>
+                <button class="nav-item" id="tab-schedule"><i class="fa-solid fa-clock"></i> Availability</button>
+                <button class="nav-item" id="tab-records"><i class="fa-solid fa-file-waveform"></i> History</button>
+                <button class="nav-item" id="tab-earnings"><i class="fa-solid fa-wallet"></i> Earnings</button>
+                <button class="nav-item" id="tab-profile"><i class="fa-solid fa-user-gear"></i> Settings</button>
                 <!-- <button class="nav-item" id="tab-catalog"><i class="fa-solid fa-list"></i> Catalog & Services</button> -->
             </nav>
 
@@ -239,4 +424,4 @@
     <script src="js/config.js"></script>
     <script src="js/provider-dash.js"></script>
 </body>
-</html>
+</html> -->
