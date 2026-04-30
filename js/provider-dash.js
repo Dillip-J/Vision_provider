@@ -369,26 +369,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return stat === 'completed';
         });
 
-        // Use the global profile price as default fallback
         let basePrice = 500; 
-        if (currentProvider && currentProvider.consultation_fee != null) {
-             basePrice = parseFloat(currentProvider.consultation_fee);
-        } else if (currentProvider && currentProvider.consultationFee != null) {
-             basePrice = parseFloat(currentProvider.consultationFee);
-        } else if (currentProvider && currentProvider.price != null) {
+        if (currentProvider && currentProvider.price != null) {
              basePrice = parseFloat(currentProvider.price);
         }
 
         const getBookingPrice = (b) => {
             if (b.total_amount != null) return parseFloat(b.total_amount);
             if (b.amount != null) return parseFloat(b.amount);
-            
-            if (b.provider) {
-                if (b.provider.consultation_fee != null) return parseFloat(b.provider.consultation_fee);
-                if (b.provider.consultationFee != null) return parseFloat(b.provider.consultationFee);
-                if (b.provider.price != null) return parseFloat(b.provider.price);
-            }
-            
+            if (b.provider && b.provider.price != null) return parseFloat(b.provider.price);
             return basePrice; 
         };
         
@@ -459,22 +448,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadProfileSettings() {
         const nameEl = document.getElementById('prof-name');
         const phoneEl = document.getElementById('prof-phone');
-        const feeEl = document.getElementById('prof-fee'); // 🚨 NEW: Fee Element
+        const addressEl = document.getElementById('prof-address'); // 🚨 NEW: Address Element
         const bioEl = document.getElementById('prof-bio');
         const bankNameEl = document.getElementById('prof-bank-name');
         const accNoEl = document.getElementById('prof-acc-no');
         const ifscEl = document.getElementById('prof-ifsc');
 
-        // Populate fields from currentProvider (database data)
         if(nameEl) nameEl.value = currentProvider.name || '';
         
-        // 🚨 Automatically populate Phone Number!
+        // 🚨 Automatically populate Phone Number
         if(phoneEl) phoneEl.value = currentProvider.phone || '';
         
-        // 🚨 Automatically populate Consultation Fee!
-        if(feeEl) {
-            feeEl.value = currentProvider.consultation_fee || currentProvider.consultationFee || currentProvider.price || 500;
-        }
+        // 🚨 Automatically populate Address
+        if(addressEl) addressEl.value = currentProvider.address || '';
 
         if(bioEl) bioEl.value = currentProvider.bio || '';
         if(bankNameEl) bankNameEl.value = currentProvider.bank_name || '';
@@ -505,13 +491,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const nameVal = document.getElementById('prof-name')?.value;
             if(nameVal) payload.name = nameVal;
             
-            // 🚨 Capture and send Phone Number
+            // 🚨 Capture Phone Number
             const phoneVal = document.getElementById('prof-phone')?.value;
             if(phoneVal) payload.phone = phoneVal;
             
-            // 🚨 Capture and send Consultation Fee
-            const feeVal = document.getElementById('prof-fee')?.value;
-            if(feeVal) payload.consultation_fee = parseFloat(feeVal);
+            // 🚨 Capture Address
+            const addressVal = document.getElementById('prof-address')?.value;
+            if(addressVal) payload.address = addressVal;
 
             const bioVal = document.getElementById('prof-bio')?.value;
             if(bioVal) payload.bio = bioVal;
