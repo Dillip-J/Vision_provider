@@ -707,34 +707,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
     switchTab('appointments');
 });
-
-//====================================================
-// Location
-//====================================================
-// ==========================================================
-// 🚨 GOOGLE MAPS AUTOCOMPLETE ENGINE (PROVIDER SETTINGS)
-// ==========================================================
-let autocomplete;
-
-// Note: Ensure this is attached to the window object so the HTML script tag can find it
-window.initAutocomplete = function() {
-    autocomplete = new google.maps.places.Autocomplete(
-        document.getElementById("prof-address"), // 🚨 Targets the Provider's Address input
-        {
-            types: ["geocode", "establishment"],
-            componentRestrictions: {'country': ['in']},
-            fields: ['place_id', 'geometry', 'formatted_address']
-        }
-    );
-    autocomplete.addListener('place_changed', onplacechanged);
-}
-
-// to change the place //
-function onplacechanged() {
-    let place = autocomplete.getPlace();
-    if (!place.geometry) {
-        document.getElementById('prof-address').placeholder = "123 Clinic Street, City...";
-    } else {
-        document.getElementById('prof-address').value = place.formatted_address;
-    }
-}
