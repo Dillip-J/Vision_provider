@@ -403,3 +403,7 @@ body.bg-main {
     .stats-grid { grid-template-columns: 1fr; }
     .mobile-only-btn { display: block; background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 10px;}
 }
+
+textarea.form-control {
+    resize: none; /* or 'none' */
+}
