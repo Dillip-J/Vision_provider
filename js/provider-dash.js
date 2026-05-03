@@ -190,6 +190,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const aptSymptoms = apt.symptoms || apt.clinical_notes || apt.order_notes || "No details provided.";
             const aptPhone = apt.client_phone || apt.patient_phone || apt.phone || 'N/A';
 
+            // 🚨 Address Parsing Logic
+            let fullAddress = "";
+            if (!isOnline) {
+                let addrParts = [];
+                if (apt.flat_number && apt.flat_number !== 'Online') addrParts.push(apt.flat_number);
+                if (apt.building_name && apt.building_name !== 'Online') addrParts.push(apt.building_name);
+                if (apt.landmark && apt.landmark !== 'Online') addrParts.push(`Near ${apt.landmark}`);
+                if (apt.delivery_address && apt.delivery_address !== 'Online') addrParts.push(apt.delivery_address);
+                
+                fullAddress = addrParts.length > 0 ? addrParts.join(', ') : (apt.address || apt.delivery_address || 'Address not provided');
+            }
+
             let btns = '';
             
             if (aptStatus === 'pending') {
@@ -216,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="apt-symptoms"><strong><i class="fa-solid fa-notes-medical"></i> Symptoms:</strong> ${aptSymptoms}</div>
                     <div class="apt-meta">
                         <div><i class="fa-regular fa-clock text-blue"></i> ${apt.time || apt.scheduled_time || 'ASAP'}</div>
-                        <div><i class="fa-solid ${isOnline ? 'fa-video' : 'fa-location-dot'}"></i> ${visitType} ${!isOnline ? `(${apt.address || apt.delivery_address || 'Clinic'})` : ''}</div>
+                        <div><i class="fa-solid ${isOnline ? 'fa-video' : 'fa-location-dot'}"></i> ${visitType} ${!isOnline ? ` - ${fullAddress}` : ''}</div>
                     </div>
                     <div class="apt-actions">${btns}</div>
                 </div>
@@ -448,19 +460,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadProfileSettings() {
         const nameEl = document.getElementById('prof-name');
         const phoneEl = document.getElementById('prof-phone');
-        const addressEl = document.getElementById('prof-address'); // 🚨 NEW: Address Element
         const bioEl = document.getElementById('prof-bio');
         const bankNameEl = document.getElementById('prof-bank-name');
         const accNoEl = document.getElementById('prof-acc-no');
         const ifscEl = document.getElementById('prof-ifsc');
 
         if(nameEl) nameEl.value = currentProvider.name || '';
-        
-        // 🚨 Automatically populate Phone Number
         if(phoneEl) phoneEl.value = currentProvider.phone || '';
-        
-        // 🚨 Automatically populate Address
-        if(addressEl) addressEl.value = currentProvider.address || '';
 
         if(bioEl) bioEl.value = currentProvider.bio || '';
         if(bankNameEl) bankNameEl.value = currentProvider.bank_name || '';
@@ -491,13 +497,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const nameVal = document.getElementById('prof-name')?.value;
             if(nameVal) payload.name = nameVal;
             
-            // 🚨 Capture Phone Number
             const phoneVal = document.getElementById('prof-phone')?.value;
             if(phoneVal) payload.phone = phoneVal;
-            
-            // 🚨 Capture Address
-            const addressVal = document.getElementById('prof-address')?.value;
-            if(addressVal) payload.address = addressVal;
 
             const bioVal = document.getElementById('prof-bio')?.value;
             if(bioVal) payload.bio = bioVal;
