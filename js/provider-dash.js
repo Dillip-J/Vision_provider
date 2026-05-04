@@ -190,7 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const aptSymptoms = apt.symptoms || apt.clinical_notes || apt.order_notes || "No details provided.";
             const aptPhone = apt.client_phone || apt.patient_phone || apt.phone || 'N/A';
 
-            // 🚨 Address Parsing Logic
             let fullAddress = "";
             if (!isOnline) {
                 let addrParts = [];
@@ -345,7 +344,15 @@ document.addEventListener('DOMContentLoaded', () => {
         tbody.innerHTML = done.map(apt => {
             const patientName = apt.client_name || apt.patient_name || apt.user_name || "Unknown Patient";
             const aptStatus = (apt.status || apt.booking_status || 'completed').toLowerCase();
-            const aptSymptoms = apt.symptoms || apt.clinical_notes || apt.order_notes || "No details provided.";
+            
+            // 🚨 FIX: Strict logic to display ONLY the clinical notes the provider typed!
+            let notesToDisplay = "No clinical notes recorded.";
+            if (apt.clinical_notes && apt.clinical_notes.trim() !== "") {
+                notesToDisplay = apt.clinical_notes;
+            } else if (aptStatus === 'canceled' || aptStatus === 'rejected') {
+                notesToDisplay = "Appointment was canceled/rejected.";
+            }
+
             const visitType = apt.visit_type || "Video Consult";
             const time = apt.time || (apt.scheduled_time ? new Date(apt.scheduled_time).toLocaleString() : 'ASAP');
 
@@ -354,7 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><strong>${patientName}</strong><br><span class="status-badge ${aptStatus}">${aptStatus.toUpperCase()}</span></td>
                 <td>${time}</td>
                 <td>${visitType}</td>
-                <td><div class="note-preview">${aptSymptoms}</div></td>
+                <td><div class="note-preview">${notesToDisplay}</div></td>
             </tr>
             `;
         }).join('');
@@ -460,6 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadProfileSettings() {
         const nameEl = document.getElementById('prof-name');
         const phoneEl = document.getElementById('prof-phone');
+        const feeEl = document.getElementById('prof-fee');
         const bioEl = document.getElementById('prof-bio');
         const bankNameEl = document.getElementById('prof-bank-name');
         const accNoEl = document.getElementById('prof-acc-no');
@@ -467,9 +475,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if(nameEl) nameEl.value = currentProvider.name || '';
         if(phoneEl) phoneEl.value = currentProvider.phone || '';
+        if(feeEl) feeEl.value = currentProvider.consultation_fee || 500;
 
         if(bioEl) bioEl.value = currentProvider.bio || '';
         if(bankNameEl) bankNameEl.value = currentProvider.bank_name || '';
+
         
         if(accNoEl) {
             accNoEl.placeholder = "Enter Account Number (9-18 Digits)";
@@ -499,6 +509,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const phoneVal = document.getElementById('prof-phone')?.value;
             if(phoneVal) payload.phone = phoneVal;
+
+            const feeVal = document.getElementById('prof-fee')?.value;
+            if(feeVal) payload.consultation_fee = parseFloat(feeVal);
 
             const bioVal = document.getElementById('prof-bio')?.value;
             if(bioVal) payload.bio = bioVal;
@@ -570,7 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.joinSecureVideoCall = async function(bookingId) {
-        alert("Video consultations are currently disabled.");
+        window.open(`video-room.html?room=${bookingId}&role=doctor`, '_blank');
     };
 
     // =========================================================================
