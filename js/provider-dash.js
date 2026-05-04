@@ -2,9 +2,6 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   
-    // =========================================================================
-    // --- 1. AUTHENTICATION & SESSION CHECK ---
-    // =========================================================================
     const token = localStorage.getItem('provider_token');
     const currentProviderString = localStorage.getItem('currentProvider'); 
 
@@ -24,9 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const providerName = currentProvider.name || "Doctor";
 
-    // =========================================================================
-    // --- 2. HEADER & UI INITIALIZATION ---
-    // =========================================================================
     const headerImg = document.getElementById("header-profile-img");
     const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(providerName)}&background=1E293B&color=fff&size=128`;
 
@@ -48,9 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if(welcomeEl) welcomeEl.textContent = `Dr. ${providerName.replace('Dr. ', '')}`;
     if(clinicEl) clinicEl.textContent = `${currentProvider.category || "General Practitioner"} • Doctor`;
 
-    // =========================================================================
-    // --- 3. DYNAMIC DASHBOARD CONFIGURATION (DOCTOR ONLY) ---
-    // =========================================================================
     const tabApt = document.getElementById('tab-appointments');
     const tabRec = document.getElementById('tab-records');
     const tabSched = document.getElementById('tab-schedule');
@@ -77,9 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =========================================================================
-    // --- 4. TAB NAVIGATION LOGIC ---
-    // =========================================================================
     const tabs = {
         appointments: { btn: tabApt, view: document.getElementById('view-appointments'), render: loadAppointments },
         schedule: { btn: tabSched, view: document.getElementById('view-schedule'), render: loadScheduleManager },
@@ -110,9 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(tabs[key].btn) tabs[key].btn.addEventListener('click', (e) => { e.preventDefault(); switchTab(key); });
     });
 
-    // =========================================================================
-    // --- 5. MASTER DASHBOARD DATA FETCHER ---
-    // =========================================================================
     async function fetchMyDashboard() {
         try {
             const res = await fetch(`${API_BASE}/providers/dashboard/me`, { 
@@ -131,9 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // =========================================================================
-    // --- 6. APPOINTMENTS / ORDERS VIEW LOGIC ---
-    // =========================================================================
     async function loadAppointments() {
         const listEl = document.getElementById('provider-appointments-list');
         if(!listEl) return;
@@ -235,9 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
-    // =========================================================================
-    // --- 7. SCHEDULE MANAGER LOGIC (STRICT 45-MIN SLOTS) ---
-    // =========================================================================
     async function loadScheduleManager() {
         const dateCon = document.getElementById('provider-date-container');
         const timeCon = document.getElementById('provider-time-container');
@@ -345,12 +324,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const patientName = apt.client_name || apt.patient_name || apt.user_name || "Unknown Patient";
             const aptStatus = (apt.status || apt.booking_status || 'completed').toLowerCase();
             
-            // 🚨 STRICT FIX: Guarantee we ONLY display the Doctor's Clinical Notes in this column!
+            // 🚨 STRICT FIX: Properly splits the symptoms and the clinical notes in the HTML
+            const aptSymptoms = apt.symptoms || "None provided";
+            
             let notesToDisplay = "No clinical notes recorded.";
             if (apt.clinical_notes && apt.clinical_notes.trim() !== "") {
                 notesToDisplay = apt.clinical_notes;
             } else if (aptStatus === 'canceled' || aptStatus === 'rejected') {
-                notesToDisplay = "Appointment was canceled.";
+                notesToDisplay = "Canceled/Rejected.";
             }
 
             const visitType = apt.visit_type || "Video Consult";
@@ -361,7 +342,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><strong>${patientName}</strong><br><span class="status-badge ${aptStatus}">${aptStatus.toUpperCase()}</span></td>
                 <td>${time}</td>
                 <td>${visitType}</td>
-                <td><div class="note-preview">${notesToDisplay}</div></td>
+                <td>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;"><strong>Symptoms:</strong> ${aptSymptoms}</div>
+                    <div class="note-preview"><strong>Notes:</strong> ${notesToDisplay}</div>
+                </td>
             </tr>
             `;
         }).join('');
@@ -464,7 +448,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================================
     // --- 10. PROFILE SETTINGS LOGIC ---
     // =========================================================================
-    function loadProfileSettings() {
+    // 🚨 FIX: Re-added the async fetch so it downloads the phone number from the DB!
+    async function loadProfileSettings() {
+        try {
+            const res = await fetch(`${API_BASE}/providers/me`, { 
+                headers: { 'Authorization': `Bearer ${token}` } 
+            });
+            if (res.ok) {
+                const fullProfile = await res.json();
+                currentProvider = { ...currentProvider, ...fullProfile };
+                localStorage.setItem('currentProvider', JSON.stringify(currentProvider));
+            }
+        } catch (err) {
+            console.warn("Could not fetch latest profile data. Using cache.");
+        }
+
         const nameEl = document.getElementById('prof-name');
         const phoneEl = document.getElementById('prof-phone');
         const feeEl = document.getElementById('prof-fee');
