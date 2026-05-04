@@ -350,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (apt.clinical_notes && apt.clinical_notes.trim() !== "") {
                 notesToDisplay = apt.clinical_notes;
             } else if (aptStatus === 'canceled' || aptStatus === 'rejected') {
-                notesToDisplay = "Appointment was canceled/rejected.";
+                notesToDisplay = "Appointment was canceled.";
             }
 
             const visitType = apt.visit_type || "Video Consult";
