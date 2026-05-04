@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const visitType = apt.visit_type || "Video Consult";
             const isOnline = visitType.toLowerCase().includes('video');
             const aptStatus = (apt.status || apt.booking_status || 'pending').toLowerCase();
-            const aptSymptoms = apt.symptoms || apt.clinical_notes || apt.order_notes || "No details provided.";
+            const aptSymptoms = apt.symptoms || "No details provided.";
             const aptPhone = apt.client_phone || apt.patient_phone || apt.phone || 'N/A';
 
             let fullAddress = "";
@@ -345,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const patientName = apt.client_name || apt.patient_name || apt.user_name || "Unknown Patient";
             const aptStatus = (apt.status || apt.booking_status || 'completed').toLowerCase();
             
-            // 🚨 FIX: Strict logic to display ONLY the clinical notes the provider typed!
+            // 🚨 STRICT FIX: Guarantee we ONLY display the Doctor's Clinical Notes in this column!
             let notesToDisplay = "No clinical notes recorded.";
             if (apt.clinical_notes && apt.clinical_notes.trim() !== "") {
                 notesToDisplay = apt.clinical_notes;
