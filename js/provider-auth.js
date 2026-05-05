@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // --- 2.5. LOAD DOCTOR SPECIALTIES (THE FIX) ---
+    // --- 2.5. LOAD DOCTOR SPECIALTIES ---
     // ==========================================
     const catSelect = document.getElementById('dynamic-category-select');
     if (catSelect) {
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // --- 3. Registration Logic (Doctor Only MVP - NO FILES) ---
+    // --- 3. Registration Logic (Doctor Only MVP) ---
     // ==========================================
     [formLogin, formSignup].forEach(form => {
         if (!form) return;
@@ -93,25 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const submitBtn = formSignup.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
-            submitBtn.textContent = "Fetching Location & Submitting...";
+            // 🚨 FIX: Removed "Fetching Location" text
+            submitBtn.textContent = "Submitting...";
             submitBtn.disabled = true;
 
-            const getProviderLocation = () => {
-                return new Promise((resolve) => {
-                    if (!navigator.geolocation) {
-                        resolve({ lat: null, lon: null });
-                    } else {
-                        navigator.geolocation.getCurrentPosition(
-                            (position) => resolve({ lat: position.coords.latitude, lon: position.coords.longitude }),
-                            (error) => resolve({ lat: null, lon: null }),
-                            { timeout: 10000 } 
-                        );
-                    }
-                });
-            };
-
             try {
-                const gps = await getProviderLocation();
                 const formData = new FormData();
                 
                 // Hardcoded to Doctor logic for MVP
@@ -122,12 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append("provider_type", "Doctor"); // Strict MVP lock
                 formData.append("category", document.getElementById('dynamic-category-select').value);
 
-                if (gps.lat && gps.lon) {
-                    formData.append("latitude", gps.lat);
-                    formData.append("longitude", gps.lon);
-                }
+                // 🚨 FIX: Geolocation check completely removed. Backend will default to None.
 
-                const response = await fetch(`${API_BASE}/providers/register`, {
+                const response = await fetch(`${window.API_BASE}/providers/register`, {
                     method: 'POST',
                     body: formData
                 });
@@ -172,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
 
             try {
-                const response = await fetch(`${API_BASE}/providers/login`, {
+                const response = await fetch(`${window.API_BASE}/providers/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: loginEmail, password: loginPassword })
