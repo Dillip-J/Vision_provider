@@ -28,17 +28,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 2. HEADER & UI INITIALIZATION ---
     // =========================================================================
     const headerImg = document.getElementById("header-profile-img");
+    const settingsPreviewImg = document.getElementById("settings-preview-img");
     const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(providerName)}&background=1E293B&color=fff&size=128`;
 
     if (currentProvider.profile_photo_url) {
         const photoUrl = currentProvider.profile_photo_url;
-        if (photoUrl.startsWith('http')) {
-            if (headerImg) headerImg.src = photoUrl;
-        } else {
-            if (headerImg) headerImg.src = `${API_BASE}${photoUrl}`;
-        }
+        let finalUrl = photoUrl.startsWith('http') ? photoUrl : `${API_BASE}${photoUrl}`;
+        if (headerImg) headerImg.src = finalUrl;
+        if (settingsPreviewImg) settingsPreviewImg.src = finalUrl;
     } else {
         if (headerImg) headerImg.src = defaultAvatar;
+        if (settingsPreviewImg) settingsPreviewImg.src = defaultAvatar;
     }
     
     setupDocumentUpload();
@@ -109,6 +109,21 @@ document.addEventListener('DOMContentLoaded', () => {
     Object.keys(tabs).forEach(key => {
         if(tabs[key].btn) tabs[key].btn.addEventListener('click', (e) => { e.preventDefault(); switchTab(key); });
     });
+
+    const mobileMenuBtn = document.getElementById('mobile-menu-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarClose = document.getElementById('sidebar-close');
+    
+    if (mobileMenuBtn && sidebar) {
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.add('mobile-open');
+        });
+    }
+    if (sidebarClose && sidebar) {
+        sidebarClose.addEventListener('click', () => {
+            sidebar.classList.remove('mobile-open');
+        });
+    }
 
     // =========================================================================
     // --- 5. MASTER DASHBOARD DATA FETCHER ---
@@ -256,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const times = [];
             const startMins = 9 * 60; 
-            const endMins = 19 * 60;  // 🚨 Updated to 7:00 PM
+            const endMins = 19 * 60;  
             const duration = 45;      
 
             for (let m = startMins; m < endMins; m += duration) {
@@ -372,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================================
-    // --- 9. EARNINGS & WITHDRAW LOGIC (WITH MATH ENGINE) ---
+    // --- 9. EARNINGS & WITHDRAW LOGIC ---
     // =========================================================================
     async function renderEarnings() {
         const listEl = document.getElementById('transactions-list');
@@ -409,14 +424,12 @@ document.addEventListener('DOMContentLoaded', () => {
             realLifetimeEarnings += getBookingPrice(b); 
         });
 
-        // 🚨 FIX: The Dynamic Withdrawal Math Engine
         const pid = currentProvider.provider_id || currentProvider.id;
         const totalWithdrawn = parseFloat(localStorage.getItem(`withdrawn_${pid}`)) || 0;
         const pendingWithdrawal = parseFloat(localStorage.getItem(`pending_withdraw_${pid}`)) || 0;
         
-        // Calculate remaining balance dynamically
         const availableBalance = realLifetimeEarnings - totalWithdrawn - pendingWithdrawal;
-        window.currentAvailableBalance = availableBalance; // Store globally for the withdraw button
+        window.currentAvailableBalance = availableBalance; 
 
         const formatMoney = (amount) => new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount || 0);
 
@@ -478,7 +491,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
-    // 🚨 FIX: Strict Withdrawal Verification and Success Process
     window.requestWithdrawal = function() {
         const acc = currentProvider.account_number;
         const ifsc = currentProvider.ifsc_code;
@@ -497,26 +509,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const pid = currentProvider.provider_id || currentProvider.id;
         
-        // 1. Log the pending withdrawal to deduct from available balance
         localStorage.setItem(`pending_withdraw_${pid}`, amtToWithdraw);
         
         alert(`Withdrawal initiated successfully!\n\nThe amount of ₹${amtToWithdraw} will be credited to your bank account ending in ${acc.slice(-4)} within 24 hours.`);
         
-        // 2. Immediately re-render to disable button and show "Processing"
         renderEarnings(); 
 
-        // 3. Simulate the 24 hour processing delay (using 8 seconds for demo)
         setTimeout(() => {
             let currentWithdrawn = parseFloat(localStorage.getItem(`withdrawn_${pid}`)) || 0;
             let pending = parseFloat(localStorage.getItem(`pending_withdraw_${pid}`)) || 0;
             
-            // Move pending funds to total withdrawn
             localStorage.setItem(`withdrawn_${pid}`, currentWithdrawn + pending);
             localStorage.removeItem(`pending_withdraw_${pid}`);
             
             alert(`Success! ₹${pending} has been officially credited to your bank account.`);
             
-            // If they are still on the page, refresh the UI again
             if(document.getElementById('view-earnings').classList.contains('active')) {
                 renderEarnings();
             }
@@ -535,16 +542,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const fullProfile = await res.json();
                 currentProvider = { ...currentProvider, ...fullProfile };
                 localStorage.setItem('currentProvider', JSON.stringify(currentProvider));
-                
-                // 🚨 FIX: Bank Alert exactly as requested (Only once per session)
-                const acc = currentProvider.account_number;
-                const ifsc = currentProvider.ifsc_code;
-                if (!acc || !ifsc || acc.trim() === "" || ifsc.trim() === "") {
-                    if (!sessionStorage.getItem('bankAlertShown')) {
-                        alert("Complete your profile and add bank details to start receiving bookings & payments.");
-                        sessionStorage.setItem('bankAlertShown', 'true');
-                    }
-                }
             }
         } catch (err) {
             console.warn("Could not fetch latest profile data. Using cache.");
@@ -552,18 +549,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const nameEl = document.getElementById('prof-name');
         const phoneEl = document.getElementById('prof-phone');
-        const feeEl = document.getElementById('prof-fee');
+        const mciEl = document.getElementById('prof-mci'); // 🚨 NEW
+        const catEl = document.getElementById('prof-category'); // 🚨 NEW
         const bioEl = document.getElementById('prof-bio');
         const bankNameEl = document.getElementById('prof-bank-name');
         const accNoEl = document.getElementById('prof-acc-no');
         const ifscEl = document.getElementById('prof-ifsc');
 
+        // Populate Form Fields
         if(nameEl) nameEl.value = currentProvider.name || '';
         if(phoneEl) phoneEl.value = currentProvider.phone || '';
-        if(feeEl) feeEl.value = currentProvider.consultation_fee || 500;
-
         if(bioEl) bioEl.value = currentProvider.bio || '';
         if(bankNameEl) bankNameEl.value = currentProvider.bank_name || '';
+
+        // 🚨 Populate NEW static fields
+        if(mciEl) mciEl.value = currentProvider.license_number || 'N/A';
+        if(catEl) catEl.value = currentProvider.category || 'General';
 
         if(accNoEl) {
             accNoEl.placeholder = "Enter Account Number (9-18 Digits)";
@@ -582,7 +583,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Call immediately to update cache and throw alert if necessary
     loadProfileSettings();
 
     const profileForm = document.getElementById('form-provider-profile');
@@ -596,9 +596,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const phoneVal = document.getElementById('prof-phone')?.value;
             if(phoneVal) payload.phone = phoneVal;
-
-            const feeVal = document.getElementById('prof-fee')?.value;
-            if(feeVal) payload.consultation_fee = parseFloat(feeVal);
 
             const bioVal = document.getElementById('prof-bio')?.value;
             if(bioVal) payload.bio = bioVal;
@@ -670,29 +667,26 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.joinSecureVideoCall = async function(bookingId) {
-        window.open(`video-room.html?room=${bookingId}&role=doctor`, '_blank');
+        // 🚨 FIX: Explicitly points to the new provider-meet.html file
+        // Also passes the doctor's name so Jitsi knows exactly who they are!
+        const docName = currentProvider.name.replace('Dr. ', '');
+        window.open(`provider-meet.html?room=${bookingId}&name=Dr.%20${encodeURIComponent(docName)}`, '_blank');
     };
-
     // =========================================================================
-    // --- 12. COMPLETION MODAL LOGIC (PURE TEXT NOTES) ---
+    // --- 12. COMPLETION MODAL LOGIC (WITH REPORT UPLOAD) ---
     // =========================================================================
     const modal = document.getElementById('upload-modal');
     window.openUploadModal = function(id, name) {
         const idEl = document.getElementById('record-booking-id');
         const nameEl = document.getElementById('record-patient-name');
         const notesEl = document.getElementById('record-notes');
+        const fileEl = document.getElementById('record-report-file');
         
         if(idEl) idEl.value = id;
         if(nameEl) nameEl.textContent = name;
         if(notesEl) notesEl.value = '';
+        if(fileEl) fileEl.value = ''; // Reset file input
         
-        const noteLabel = document.getElementById('modal-notes-label');
-        const titleEl = document.getElementById('modal-dynamic-title');
-        
-        if (titleEl && noteLabel) {
-            titleEl.textContent = "Complete Consultation";
-            noteLabel.textContent = "Clinical Notes / Diagnosis *";
-        }
         if(modal) modal.classList.remove('hidden');
     };
 
@@ -710,18 +704,44 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const id = document.getElementById('record-booking-id').value;
             const notes = document.getElementById('record-notes').value;
+            const fileInput = document.getElementById('record-report-file');
             
             const btn = e.target.querySelector('button');
-            btn.textContent = "Processing..."; btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...'; 
+            btn.disabled = true;
+
+            let reportUrl = null;
 
             try {
+                // 🚨 FIX: Upload the report image FIRST if they attached one!
+                if (fileInput && fileInput.files.length > 0) {
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading Image...';
+                    
+                    const fd = new FormData();
+                    fd.append("file", fileInput.files[0]);
+                    
+                    const uploadRes = await fetch(`${API_BASE}/files/upload/report`, {
+                        method: "POST",
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: fd
+                    });
+
+                    if (!uploadRes.ok) throw new Error("Image upload failed. Please try again.");
+                    
+                    const data = await uploadRes.json();
+                    reportUrl = data.url; 
+                }
+
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving Notes...';
+
+                // Now officially mark the appointment complete with notes AND the report url
                 await fetch(`${API_BASE}/providers/bookings/${id}/status`, { 
                     method: 'PATCH', 
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
                     body: JSON.stringify({ 
                         status: 'completed', 
                         notes: notes,
-                        report_url: null 
+                        report_url: reportUrl 
                     }) 
                 });
 
@@ -731,7 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch(error) {
                 alert("Error: " + error.message);
             } finally { 
-                btn.textContent = "Mark Completed"; 
+                btn.textContent = "Submit"; 
                 btn.disabled = false; 
             }
         });
@@ -775,7 +795,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     const headerImg = document.getElementById("header-profile-img");
+                    const settingsPreviewImg = document.getElementById("settings-preview-img");
                     if(headerImg) headerImg.src = fullUrl;
+                    if(settingsPreviewImg) settingsPreviewImg.src = fullUrl;
                     
                     currentProvider.profile_photo_url = data.url; 
                     localStorage.setItem('currentProvider', JSON.stringify(currentProvider));
