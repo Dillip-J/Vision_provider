@@ -22,13 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return; 
     }
 
-    // 🚨 FIX: Alert the provider every time they open the app if bank details are missing
-    if (!currentProvider.account_number || !currentProvider.ifsc_code || currentProvider.account_number.trim() === "" || currentProvider.ifsc_code.trim() === "") {
-        setTimeout(() => {
-            alert("Complete your profile and add bank details to start receiving bookings & payments.");
-        }, 500);
-    }
-
     const providerName = currentProvider.name || "Doctor";
 
     // =========================================================================
@@ -243,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================================
-    // --- 7. SCHEDULE MANAGER LOGIC ---
+    // --- 7. SCHEDULE MANAGER LOGIC (STRICT 45-MIN SLOTS) ---
     // =========================================================================
     async function loadScheduleManager() {
         const dateCon = document.getElementById('provider-date-container');
@@ -262,8 +255,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) {}
 
             const times = [];
-            const startMins = 9 * 60; // 9:00 AM
-            const endMins = 19 * 60;  // 🚨 FIX: Changed from 17*60 (5PM) to 19*60 (7PM)
+            const startMins = 9 * 60; 
+            const endMins = 19 * 60;  // 🚨 Updated to 7:00 PM
             const duration = 45;      
 
             for (let m = startMins; m < endMins; m += duration) {
@@ -379,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================================
-    // --- 9. EARNINGS & WITHDRAW LOGIC ---
+    // --- 9. EARNINGS & WITHDRAW LOGIC (WITH MATH ENGINE) ---
     // =========================================================================
     async function renderEarnings() {
         const listEl = document.getElementById('transactions-list');
@@ -416,40 +409,49 @@ document.addEventListener('DOMContentLoaded', () => {
             realLifetimeEarnings += getBookingPrice(b); 
         });
 
-        const financials = { 
-            lifetime_earnings: realLifetimeEarnings, 
-            this_month_earnings: realLifetimeEarnings, 
-            current_month_name: (dashboardData.financials && dashboardData.financials.current_month_name) ? dashboardData.financials.current_month_name : "This Month" 
-        };
+        // 🚨 FIX: The Dynamic Withdrawal Math Engine
+        const pid = currentProvider.provider_id || currentProvider.id;
+        const totalWithdrawn = parseFloat(localStorage.getItem(`withdrawn_${pid}`)) || 0;
+        const pendingWithdrawal = parseFloat(localStorage.getItem(`pending_withdraw_${pid}`)) || 0;
         
+        // Calculate remaining balance dynamically
+        const availableBalance = realLifetimeEarnings - totalWithdrawn - pendingWithdrawal;
+        window.currentAvailableBalance = availableBalance; // Store globally for the withdraw button
+
         const formatMoney = (amount) => new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount || 0);
 
         const statsEl = document.getElementById('earnings-stats');
         if(statsEl) {
-            // 🚨 FIX: Injected the new Withdraw Funds card here!
             statsEl.innerHTML = `
                 <div class="stat-card gradient-blue">
                     <div class="stat-info">
-                        <span>Earnings in ${financials.current_month_name}</span>
-                        <strong>₹${formatMoney(financials.this_month_earnings)}</strong>
+                        <span>Available Balance</span>
+                        <strong style="font-size: 2rem;">₹${formatMoney(availableBalance)}</strong>
                     </div>
-                    <div class="stat-icon"><i class="fa-solid fa-chart-line"></i></div>
+                    <div class="stat-icon"><i class="fa-solid fa-wallet"></i></div>
                 </div>
+
                 <div class="stat-card">
                     <div class="stat-info">
                         <span>Lifetime Earnings</span>
-                        <strong>₹${formatMoney(financials.lifetime_earnings)}</strong>
+                        <strong>₹${formatMoney(realLifetimeEarnings)}</strong>
                     </div>
                     <div class="stat-icon green"><i class="fa-solid fa-sack-dollar"></i></div>
                 </div>
-                <div class="stat-card">
+
+                <div class="stat-card" style="border: 2px solid var(--primary-blue); background: rgba(59, 130, 246, 0.05);">
                     <div class="stat-info" style="width: 100%;">
-                        <span>Withdraw Funds</span>
-                        <div style="margin-top: 8px;">
-                            <button onclick="window.requestWithdrawal()" class="btn-primary" style="padding: 8px 16px; font-size: 0.9rem; width: 100%; display: flex; justify-content: center; gap: 8px;">
-                                <i class="fa-solid fa-building-columns"></i> Withdraw
-                            </button>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-weight: 600;">Total Withdrawn:</span>
+                            <strong class="text-green">₹${formatMoney(totalWithdrawn)}</strong>
                         </div>
+                        
+                        ${pendingWithdrawal > 0 ? `<div style="font-size: 0.85rem; color: #F59E0B; margin-bottom: 8px;"><i class="fa-solid fa-spinner fa-spin"></i> Processing: ₹${formatMoney(pendingWithdrawal)}</div>` : ''}
+                        
+                        <button id="withdraw-btn" onclick="window.requestWithdrawal()" class="btn-primary ${availableBalance <= 0 || pendingWithdrawal > 0 ? 'disabled' : ''}" style="width: 100%; display: flex; justify-content: center; gap: 8px;" ${availableBalance <= 0 || pendingWithdrawal > 0 ? 'disabled' : ''}>
+                            <i class="fa-solid fa-building-columns"></i> 
+                            ${pendingWithdrawal > 0 ? 'Withdrawal in Progress...' : 'Withdraw ₹' + formatMoney(availableBalance)}
+                        </button>
                     </div>
                 </div>
             `;
@@ -476,25 +478,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
-    // 🚨 FIX: The Global Withdraw Logic
+    // 🚨 FIX: Strict Withdrawal Verification and Success Process
     window.requestWithdrawal = function() {
         const acc = currentProvider.account_number;
         const ifsc = currentProvider.ifsc_code;
         
         if (!acc || !ifsc || acc.trim() === "" || ifsc.trim() === "") {
             alert("Action Denied: You cannot withdraw funds yet.\n\nPlease complete your profile and add your bank details to start receiving payments.");
-            switchTab('profile'); // Send them to settings tab
+            switchTab('profile'); 
             return;
         }
 
-        alert(`Withdrawal request submitted successfully!\n\nYour available funds will be transferred to your bank account ending in ${acc.slice(-4)} within 2-3 business days.`);
+        const amtToWithdraw = window.currentAvailableBalance || 0;
+        if (amtToWithdraw <= 0) {
+            alert("You have no available funds to withdraw.");
+            return;
+        }
+
+        const pid = currentProvider.provider_id || currentProvider.id;
+        
+        // 1. Log the pending withdrawal to deduct from available balance
+        localStorage.setItem(`pending_withdraw_${pid}`, amtToWithdraw);
+        
+        alert(`Withdrawal initiated successfully!\n\nThe amount of ₹${amtToWithdraw} will be credited to your bank account ending in ${acc.slice(-4)} within 24 hours.`);
+        
+        // 2. Immediately re-render to disable button and show "Processing"
+        renderEarnings(); 
+
+        // 3. Simulate the 24 hour processing delay (using 8 seconds for demo)
+        setTimeout(() => {
+            let currentWithdrawn = parseFloat(localStorage.getItem(`withdrawn_${pid}`)) || 0;
+            let pending = parseFloat(localStorage.getItem(`pending_withdraw_${pid}`)) || 0;
+            
+            // Move pending funds to total withdrawn
+            localStorage.setItem(`withdrawn_${pid}`, currentWithdrawn + pending);
+            localStorage.removeItem(`pending_withdraw_${pid}`);
+            
+            alert(`Success! ₹${pending} has been officially credited to your bank account.`);
+            
+            // If they are still on the page, refresh the UI again
+            if(document.getElementById('view-earnings').classList.contains('active')) {
+                renderEarnings();
+            }
+        }, 8000); 
     };
 
     // =========================================================================
     // --- 10. PROFILE SETTINGS LOGIC ---
     // =========================================================================
-    
-    // 🚨 FIX: Fetches the raw profile data dynamically to pre-fill phone & bank details properly!
     async function loadProfileSettings() {
         try {
             const res = await fetch(`${API_BASE}/providers/me`, { 
@@ -504,6 +535,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const fullProfile = await res.json();
                 currentProvider = { ...currentProvider, ...fullProfile };
                 localStorage.setItem('currentProvider', JSON.stringify(currentProvider));
+                
+                // 🚨 FIX: Bank Alert exactly as requested (Only once per session)
+                const acc = currentProvider.account_number;
+                const ifsc = currentProvider.ifsc_code;
+                if (!acc || !ifsc || acc.trim() === "" || ifsc.trim() === "") {
+                    if (!sessionStorage.getItem('bankAlertShown')) {
+                        alert("Complete your profile and add bank details to start receiving bookings & payments.");
+                        sessionStorage.setItem('bankAlertShown', 'true');
+                    }
+                }
             }
         } catch (err) {
             console.warn("Could not fetch latest profile data. Using cache.");
@@ -517,7 +558,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const accNoEl = document.getElementById('prof-acc-no');
         const ifscEl = document.getElementById('prof-ifsc');
 
-        // Populate Form Fields
         if(nameEl) nameEl.value = currentProvider.name || '';
         if(phoneEl) phoneEl.value = currentProvider.phone || '';
         if(feeEl) feeEl.value = currentProvider.consultation_fee || 500;
@@ -542,7 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Automatically call this immediately so the background cache updates for the Withdraw check
+    // Call immediately to update cache and throw alert if necessary
     loadProfileSettings();
 
     const profileForm = document.getElementById('form-provider-profile');
@@ -675,7 +715,6 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.textContent = "Processing..."; btn.disabled = true;
 
             try {
-                // Send only text notes to complete the appointment
                 await fetch(`${API_BASE}/providers/bookings/${id}/status`, { 
                     method: 'PATCH', 
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
