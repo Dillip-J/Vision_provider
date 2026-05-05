@@ -1,253 +1,183 @@
-<!doctype html>
-<html lang="en" data-theme="light">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vision - Provider Dashboard</title>
-    <link rel="stylesheet" href="css/provider-dashboard.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  </head>
-  <body>
-    <header class="provider-top-nav">
-      <div class="nav-left">
-        <button class="mobile-menu-toggle" id="mobile-menu-toggle">
-          <i class="fa-solid fa-bars"></i>
-        </button>
-        <div class="brand">
-          <div class="logo-circle">
-            <i class="fa-solid fa-user-doctor"></i>
-          </div>
-          <div class="brand-text">
-            <strong>Vision</strong>
-            <span>Partner Portal</span>
-          </div>
+    <link rel="stylesheet" href="css/provider-dashboard.css"> 
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-main">
+
+    <div class="dash-wrapper">
+        <aside class="dash-sidebar">
+            <div class="sidebar-brand">
+                <div class="logo-circle"><i class="fa-solid fa-briefcase-medical"></i></div>
+                <div class="brand-text">
+                    <strong>Vision</strong>
+                    <span>Partner Portal</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <button class="nav-item active" id="tab-appointments"><i class="fa-solid fa-calendar-check"></i> Requests</button>
+                <button class="nav-item" id="tab-schedule"><i class="fa-solid fa-clock"></i> Availability</button>
+                <button class="nav-item" id="tab-records"><i class="fa-solid fa-file-waveform"></i> History</button>
+                <button class="nav-item" id="tab-earnings"><i class="fa-solid fa-wallet"></i> Earnings</button>
+                <button class="nav-item" id="tab-profile"><i class="fa-solid fa-user-gear"></i> Settings</button>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <button id="theme-toggle" class="btn-sidebar-outline"><i class="fa-regular fa-moon" id="theme-icon"></i> Theme</button>
+                <button class="btn-sidebar-outline text-red" id="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            </div>
+        </aside>
+
+        <div class="dash-main">
+            <header class="dash-header">
+                <div class="header-profile-box">
+                    <img id="header-profile-img" src="" alt="Provider Photo">
+                    <div>
+                        <h1 id="welcome-message">Loading...</h1>
+                        <p id="clinic-name">Fetching business details...</p>
+                    </div>
+                </div>
+                <button id="mobile-btn-logout" class="mobile-only-btn text-red"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </header>
+
+            <div class="dash-content">
+                
+                <section id="view-appointments" class="view-section active">
+                    <div class="stats-grid" id="provider-stats"></div>
+                    <h2 id="pending-title">Active Requests</h2>
+                    <div class="list-container" id="provider-appointments-list"></div>
+                </section>
+
+                <section id="view-schedule" class="view-section hidden">
+                    <div class="dash-card">
+                        <h2>Manage Operating Hours</h2>
+                        <p>Block out times your business is opened or available.</p>
+
+                        <h3><i class="fa-regular fa-calendar text-blue"></i> Select Day</h3>
+                        <div class="date-scroll-container" id="provider-date-container"></div>
+                        
+                        <h3><i class="fa-regular fa-clock text-blue"></i> Time Slots (45 Mins)</h3>
+                        <div class="time-grid" id="provider-time-container"></div>
+                    </div>
+                </section>
+
+                <section id="view-records" class="view-section hidden">
+                    <div class="dash-card">
+                        <h2>Completed Records</h2>
+                        <p>Access history and clinical notes securely.</p>
+                        <div class="table-container">
+                            <table class="records-table">
+                                <thead>
+                                    <tr>
+                                        <th>Patient / Client</th>
+                                        <th>Date & Time</th>
+                                        <th>Service Type</th>
+                                        <th>Clinical Notes / Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="records-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="view-earnings" class="view-section hidden">
+                    <h2>Revenue Dashboard</h2>
+                    <p>Track your earnings from completed orders and consults.</p>
+                    <div class="stats-grid" id="earnings-stats"></div>
+                    <h3>Recent Transactions</h3>
+                    <div class="list-container" id="transactions-list"></div>
+                </section>
+
+                <section id="view-profile" class="view-section hidden">
+                    <h2>Settings & Payouts</h2>
+                    <p>Update your public business profile and bank account.</p>
+
+                    <form id="form-provider-profile" class="mt-24">
+                        <div class="profile-grid">
+                            
+                            <div class="dash-card">
+                                <h3><i class="fa-regular fa-id-card text-blue"></i> Business Information</h3>
+                                
+                                <div class="profile-upload-action">
+                                    <button type="button" class="btn-outline text-blue btn-small" id="btn-trigger-upload">
+                                        <i class="fa-solid fa-camera"></i> Change Photo
+                                    </button>
+                                    <input type="file" id="profile-photo-input" accept="image/*" class="hidden">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Business / Provider Name</label>
+                                    <input type="text" id="prof-name" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Contact Phone</label>
+                                    <input type="text" id="prof-phone" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Detailed Public Bio / Description</label>
+                                    <textarea id="prof-bio" rows="6" class="form-control" placeholder="List your degrees, specializations, or specific business details..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="dash-card">
+                                <h3><i class="fa-solid fa-building-columns text-green"></i> Bank Details for Payouts</h3>
+                                
+                                <div class="form-group">
+                                    <label>Bank Name</label>
+                                    <input type="text" id="prof-bank-name" class="form-control" placeholder="e.g. HDFC Bank">
+                                </div>
+                                <div class="form-group">
+                                    <label>Account Number</label>
+                                    <input type="text" id="prof-acc-no" class="form-control" placeholder="Enter New Account Number">
+                                </div>
+                                <div class="form-group">
+                                    <label>IFSC / Routing Code</label>
+                                    <input type="text" id="prof-ifsc" class="form-control" placeholder="Enter New IFSC Code">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-right mt-24">
+                            <button type="submit" id="btn-save-profile" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+                        </div>
+                    </form>
+                </section>
+
+            </div>
         </div>
-      </div>
-      <div class="nav-right">
-        <button id="theme-toggle" class="icon-button" aria-label="Toggle Dark Mode">
-          <i class="fa-regular fa-moon" id="theme-icon"></i>
-        </button>
-        <div class="provider-profile-menu">
-          <img src="" alt="Provider" id="header-profile-img" class="header-avatar" />
-          <div class="header-info">
-            <strong id="welcome-message">Loading...</strong>
-            <span id="clinic-name">Loading...</span>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <div class="dashboard-container">
-      <aside class="sidebar" id="sidebar">
-        <button class="sidebar-close" id="sidebar-close">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-        <nav class="sidebar-menu">
-          <button class="sidebar-btn active" id="tab-appointments">
-            <i class="fa-regular fa-calendar-check"></i> Requests
-          </button>
-          <button class="sidebar-btn" id="tab-schedule">
-            <i class="fa-regular fa-clock"></i> Availability
-          </button>
-          <button class="sidebar-btn" id="tab-records">
-            <i class="fa-solid fa-file-medical"></i> History
-          </button>
-          <button class="sidebar-btn" id="tab-earnings">
-            <i class="fa-solid fa-wallet"></i> Earnings
-          </button>
-          <button class="sidebar-btn" id="tab-profile">
-            <i class="fa-solid fa-user-gear"></i> Settings
-          </button>
-        </nav>
-        <div class="sidebar-footer">
-          <button class="btn-logout" id="btn-logout">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
-          </button>
-        </div>
-      </aside>
-
-      <main class="main-content">
-        
-        <section id="view-appointments" class="tab-content active">
-          <div class="section-header">
-            <h2>Patient Requests</h2>
-            <p>Manage your pending and upcoming appointments.</p>
-          </div>
-          <div class="stats-grid" id="provider-stats">
-            </div>
-          <div class="appointments-grid" id="provider-appointments-list">
-            </div>
-        </section>
-
-        <section id="view-schedule" class="tab-content hidden">
-          <div class="section-header">
-            <h2>Manage Availability</h2>
-            <p>Select the days and 45-minute slots you are available.</p>
-          </div>
-          <div class="schedule-manager">
-            <div class="day-selector" id="provider-date-container">
-              </div>
-            <div class="time-selector">
-              <h3 style="margin-top:0; margin-bottom: 16px; font-size:1rem; color:var(--text-main);">Available Time Slots</h3>
-              <div class="time-grid" id="provider-time-container">
-                </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="view-records" class="tab-content hidden">
-          <div class="section-header">
-            <h2>Completed Records</h2>
-            <p>Access history and clinical notes securely.</p>
-          </div>
-          
-          <div class="records-container">
-            <table class="records-table">
-              <thead>
-                <tr>
-                  <th>Patient / Client</th>
-                  <th>Date & Time</th>
-                  <th>Service Type</th>
-                  <th>Clinical Notes</th>
-                </tr>
-              </thead>
-              <tbody id="records-list">
-                </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section id="view-earnings" class="tab-content hidden">
-          <div class="section-header">
-            <h2>Financial Overview</h2>
-            <p>Track your earnings and pending payouts.</p>
-          </div>
-          
-          <div class="stats-grid" id="earnings-stats">
-            </div>
-
-          <div class="transactions-container mt-4">
-            <h3>Recent Transactions</h3>
-            <div id="transactions-list">
-              </div>
-          </div>
-        </section>
-
-        <section id="view-profile" class="tab-content hidden">
-          <div class="section-header">
-            <h2>Profile Settings</h2>
-            <p>Update your public details and banking information.</p>
-          </div>
-          
-          <div class="settings-grid">
-            <div class="settings-card">
-              <h3>Profile Photo</h3>
-              <div class="photo-upload-area">
-                <div class="photo-preview">
-                  <img src="" id="settings-preview-img" alt="Profile" onerror="this.src='https://ui-avatars.com/api/?name=DR&background=1E293B&color=fff&size=128'" />
-                </div>
-                <div class="photo-actions">
-                  <p>Upload a professional headshot.</p>
-                  <input type="file" id="profile-photo-input" accept="image/png, image/jpeg, image/jpg" style="display: none;" />
-                  <button type="button" class="btn-outline" id="btn-trigger-upload"><i class="fa-solid fa-cloud-arrow-up"></i> Select Image</button>
-                </div>
-              </div>
-            </div>
-
-            <form id="form-provider-profile" class="settings-card">
-              <h3>Public Information</h3>
-              <div class="form-row two-col">
-                <div class="input-group">
-                  <label>Full Name</label>
-                  <input type="text" id="prof-name" class="form-control" />
-                </div>
-                <div class="input-group">
-                  <label>Contact Phone</label>
-                  <input type="tel" id="prof-phone" class="form-control" />
-                </div>
-              </div>
-
-              <div class="form-row mt-spacing">
-                <div class="input-group">
-                  <label>Registered Email</label>
-                  <input type="email" id="prof-email" class="form-control" disabled style="background-color: var(--bg-body); cursor: not-allowed;" />
-                  <small style="color: var(--text-muted); font-size: 0.75rem;">Contact Admin to change your registered email.</small>
-                </div>
-              </div>
-
-              <div class="form-row two-col mt-spacing">
-                <div class="input-group">
-                  <label>Medical License / MCI Number</label>
-                  <input type="text" id="prof-mci" class="form-control" disabled style="background-color: var(--bg-body); cursor: not-allowed;" />
-                  <small style="color: var(--text-muted); font-size: 0.75rem;">Contact Admin to change license details.</small>
-                </div>
-                <div class="input-group">
-                  <label>Specialization</label>
-                  <input type="text" id="prof-category" class="form-control" disabled style="background-color: var(--bg-body); cursor: not-allowed;" />
-                </div>
-              </div>
-
-              <div class="form-row mt-spacing">
-                <label>Professional Bio</label>
-                <textarea id="prof-bio" class="form-control" rows="3" placeholder="Tell patients about your experience..."></textarea>
-              </div>
-
-              <h3 class="mt-4">Banking Details (For Payouts)</h3>
-              <div class="form-row two-col">
-                <div class="input-group">
-                  <label>Bank Name</label>
-                  <input type="text" id="prof-bank-name" class="form-control" placeholder="e.g. HDFC Bank" />
-                </div>
-                <div class="input-group">
-                  <label>IFSC Code</label>
-                  <input type="text" id="prof-ifsc" class="form-control" />
-                </div>
-              </div>
-              <div class="form-row mt-spacing">
-                <div class="input-group">
-                  <label>Account Number</label>
-                  <input type="text" id="prof-acc-no" class="form-control" />
-                </div>
-              </div>
-
-              <button type="submit" class="btn-primary mt-4" id="btn-save-profile">Save Changes</button>
-            </form>
-          </div>
-        </section>
-
-      </main>
     </div>
 
     <div class="modal-overlay hidden" id="upload-modal">
-      <div class="modal-container">
-        <div class="modal-header">
-          <h2 id="modal-dynamic-title">Action Required</h2>
-          <button class="modal-close" id="close-upload-btn"><i class="fa-solid fa-xmark"></i></button>
+        <div class="modal-container">
+            <button class="modal-close" id="close-upload-btn"><i class="fa-solid fa-xmark"></i></button>
+            <h2 id="modal-dynamic-title">Complete Service</h2>
+            
+            <form id="form-upload-record" class="modal-form">
+                <input type="hidden" id="record-booking-id">
+                <div class="modal-client-box">
+                    <strong>Client: <span id="record-patient-name">...</span></strong>
+                </div>
+                
+                <div class="form-group">
+                    <label id="modal-notes-label">Clinical Notes / Remarks *</label>
+                    <textarea id="record-notes" rows="4" class="form-control" required placeholder="Type the review/notes here..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn-primary btn-block mt-24">Mark Completed</button>
+            </form>
         </div>
-        <form id="form-upload-record" style="padding: 24px;">
-          <input type="hidden" id="record-booking-id" />
-          <p style="margin: 0 0 16px 0; color: var(--text-muted);">Completing appointment for <strong id="record-patient-name" style="color: var(--text-main);">Patient</strong>.</p>
-          
-          <div class="input-group">
-            <label id="modal-notes-label">Notes</label>
-            <textarea id="record-notes" class="form-control" rows="4" required></textarea>
-          </div>
-
-          <div class="input-group mt-spacing" style="border: 1px dashed var(--card-border); padding: 16px; border-radius: 8px; text-align: center;">
-            <label style="display: block; margin-bottom: 8px;">Attach Patient Report / Prescription (Optional)</label>
-            <input type="file" id="record-report-file" accept="image/png, image/jpeg, image/jpg" style="display: block; margin: 0 auto; max-width: 100%;" />
-            <small style="display: block; margin-top: 8px; color: var(--text-muted);">Max size: 5MB. JPG/PNG only.</small>
-          </div>
-
-          <button type="submit" class="btn-primary full-width mt-4" id="btn-submit-upload">Submit</button>
-        </form>
-      </div>
     </div>
-
+    
     <script src="js/config.js"></script>
     <script src="js/provider-dash.js"></script>
-  </body>
+</body>
 </html>
 <!-- <!DOCTYPE html>
 <html lang="en">
