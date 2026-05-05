@@ -91,9 +91,11 @@ document.addEventListener('DOMContentLoaded', () => {
         formSignup.addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            // 🚨 FIX: Bulletproof Fallback URL to prevent 405 Errors
+            const API_BASE = window.API_BASE || 'https://backend-depolyment-3.onrender.com';
+
             const submitBtn = formSignup.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
-            // 🚨 FIX: Removed "Fetching Location" text
             submitBtn.textContent = "Submitting...";
             submitBtn.disabled = true;
 
@@ -108,9 +110,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append("provider_type", "Doctor"); // Strict MVP lock
                 formData.append("category", document.getElementById('dynamic-category-select').value);
 
-                // 🚨 FIX: Geolocation check completely removed. Backend will default to None.
+                // 🚨 FIX: Capture the MCI/License number so it saves to the backend!
+                const licenseInput = document.getElementById('dynamic-license-input');
+                if (licenseInput && licenseInput.value) {
+                    formData.append("license_number", licenseInput.value);
+                }
 
-                const response = await fetch(`${window.API_BASE}/providers/register`, {
+                const response = await fetch(`${API_BASE}/providers/register`, {
                     method: 'POST',
                     body: formData
                 });
@@ -131,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             } catch (err) {
                 console.error(err);
-                alert("Server connection failed. Make sure your local uvicorn server is running.");
+                alert("Server connection failed. Make sure your backend server is running.");
             } finally {
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
@@ -146,6 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
         formLogin.addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            // 🚨 FIX: Bulletproof Fallback URL
+            const API_BASE = window.API_BASE || 'https://backend-depolyment-3.onrender.com';
+            
             const loginEmail = document.getElementById('provider-login-email').value.toLowerCase();
             const loginPassword = document.getElementById('provider-login-password').value;
 
@@ -155,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
 
             try {
-                const response = await fetch(`${window.API_BASE}/providers/login`, {
+                const response = await fetch(`${API_BASE}/providers/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: loginEmail, password: loginPassword })
@@ -180,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             } catch (err) {
                 console.error(err);
-                alert("Server connection failed. Make sure your local uvicorn server is running.");
+                alert("Server connection failed. Make sure your backend server is running.");
             } finally {
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
