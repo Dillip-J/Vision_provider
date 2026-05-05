@@ -2,9 +2,6 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   
-    // =========================================================================
-    // --- 1. AUTHENTICATION & SESSION CHECK ---
-    // =========================================================================
     const token = localStorage.getItem('provider_token');
     const currentProviderString = localStorage.getItem('currentProvider'); 
 
@@ -24,9 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const providerName = currentProvider.name || "Doctor";
 
-    // =========================================================================
-    // --- 2. HEADER & UI INITIALIZATION ---
-    // =========================================================================
     const headerImg = document.getElementById("header-profile-img");
     const settingsPreviewImg = document.getElementById("settings-preview-img");
     const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(providerName)}&background=1E293B&color=fff&size=128`;
@@ -48,9 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if(welcomeEl) welcomeEl.textContent = `Dr. ${providerName.replace('Dr. ', '')}`;
     if(clinicEl) clinicEl.textContent = `${currentProvider.category || "General Practitioner"} • Doctor`;
 
-    // =========================================================================
-    // --- 3. DYNAMIC DASHBOARD CONFIGURATION (DOCTOR ONLY) ---
-    // =========================================================================
     const tabApt = document.getElementById('tab-appointments');
     const tabRec = document.getElementById('tab-records');
     const tabSched = document.getElementById('tab-schedule');
@@ -77,9 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =========================================================================
-    // --- 4. TAB NAVIGATION LOGIC ---
-    // =========================================================================
     const tabs = {
         appointments: { btn: tabApt, view: document.getElementById('view-appointments'), render: loadAppointments },
         schedule: { btn: tabSched, view: document.getElementById('view-schedule'), render: loadScheduleManager },
@@ -125,9 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =========================================================================
-    // --- 5. MASTER DASHBOARD DATA FETCHER ---
-    // =========================================================================
     async function fetchMyDashboard() {
         try {
             const res = await fetch(`${API_BASE}/providers/dashboard/me`, { 
@@ -146,9 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // =========================================================================
-    // --- 6. APPOINTMENTS / ORDERS VIEW LOGIC ---
-    // =========================================================================
     async function loadAppointments() {
         const listEl = document.getElementById('provider-appointments-list');
         if(!listEl) return;
@@ -250,9 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
-    // =========================================================================
-    // --- 7. SCHEDULE MANAGER LOGIC (STRICT 45-MIN SLOTS) ---
-    // =========================================================================
     async function loadScheduleManager() {
         const dateCon = document.getElementById('provider-date-container');
         const timeCon = document.getElementById('provider-time-container');
@@ -330,9 +309,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // =========================================================================
-    // --- 8. PATIENT RECORDS / HISTORY LOGIC ---
-    // =========================================================================
     async function renderPatientRecords() {
         const tbody = document.getElementById('records-list');
         if(!tbody) return;
@@ -386,9 +362,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
-    // =========================================================================
-    // --- 9. EARNINGS & WITHDRAW LOGIC ---
-    // =========================================================================
     async function renderEarnings() {
         const listEl = document.getElementById('transactions-list');
         if(!listEl) return;
@@ -407,16 +380,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return stat === 'completed';
         });
 
-        let basePrice = 500; 
-        if (currentProvider && currentProvider.price != null) {
-             basePrice = parseFloat(currentProvider.price);
-        }
-
         const getBookingPrice = (b) => {
+            if (b.price != null) return parseFloat(b.price);
             if (b.total_amount != null) return parseFloat(b.total_amount);
             if (b.amount != null) return parseFloat(b.amount);
-            if (b.provider && b.provider.price != null) return parseFloat(b.provider.price);
-            return basePrice; 
+            return 500; 
         };
         
         let realLifetimeEarnings = 0;
@@ -542,6 +510,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const fullProfile = await res.json();
                 currentProvider = { ...currentProvider, ...fullProfile };
                 localStorage.setItem('currentProvider', JSON.stringify(currentProvider));
+                
+                const acc = currentProvider.account_number;
+                const ifsc = currentProvider.ifsc_code;
+                if (!acc || !ifsc || acc.trim() === "" || ifsc.trim() === "") {
+                    if (!sessionStorage.getItem('bankAlertShown')) {
+                        alert("Complete your profile and add bank details to start receiving bookings & payments.");
+                        sessionStorage.setItem('bankAlertShown', 'true');
+                    }
+                }
             }
         } catch (err) {
             console.warn("Could not fetch latest profile data. Using cache.");
@@ -549,8 +526,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const nameEl = document.getElementById('prof-name');
         const phoneEl = document.getElementById('prof-phone');
-        const mciEl = document.getElementById('prof-mci'); // 🚨 NEW
-        const catEl = document.getElementById('prof-category'); // 🚨 NEW
+        const emailEl = document.getElementById('prof-email'); // 🚨 NEW
+        const mciEl = document.getElementById('prof-mci'); 
+        const catEl = document.getElementById('prof-category'); 
         const bioEl = document.getElementById('prof-bio');
         const bankNameEl = document.getElementById('prof-bank-name');
         const accNoEl = document.getElementById('prof-acc-no');
@@ -559,10 +537,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Populate Form Fields
         if(nameEl) nameEl.value = currentProvider.name || '';
         if(phoneEl) phoneEl.value = currentProvider.phone || '';
+        if(emailEl) emailEl.value = currentProvider.email || ''; // 🚨 NEW
         if(bioEl) bioEl.value = currentProvider.bio || '';
         if(bankNameEl) bankNameEl.value = currentProvider.bank_name || '';
 
-        // 🚨 Populate NEW static fields
+        // Populate Static fields
         if(mciEl) mciEl.value = currentProvider.license_number || 'N/A';
         if(catEl) catEl.value = currentProvider.category || 'General';
 
@@ -654,9 +633,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =========================================================================
-    // --- 11. GLOBAL ACTIONS ---
-    // =========================================================================
     window.updateBookingStatus = async function(id, status) {
         const confirmMsg = status === 'canceled' ? "Cancel this due to an emergency?" : `Mark as ${status}?`;
         if (!confirm(confirmMsg)) return;
@@ -667,14 +643,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.joinSecureVideoCall = async function(bookingId) {
-        // 🚨 FIX: Explicitly points to the new provider-meet.html file
-        // Also passes the doctor's name so Jitsi knows exactly who they are!
         const docName = currentProvider.name.replace('Dr. ', '');
         window.open(`provider-meet.html?room=${bookingId}&name=Dr.%20${encodeURIComponent(docName)}`, '_blank');
     };
-    // =========================================================================
-    // --- 12. COMPLETION MODAL LOGIC (WITH REPORT UPLOAD) ---
-    // =========================================================================
+
     const modal = document.getElementById('upload-modal');
     window.openUploadModal = function(id, name) {
         const idEl = document.getElementById('record-booking-id');
@@ -685,7 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(idEl) idEl.value = id;
         if(nameEl) nameEl.textContent = name;
         if(notesEl) notesEl.value = '';
-        if(fileEl) fileEl.value = ''; // Reset file input
+        if(fileEl) fileEl.value = ''; 
         
         if(modal) modal.classList.remove('hidden');
     };
@@ -713,7 +685,6 @@ document.addEventListener('DOMContentLoaded', () => {
             let reportUrl = null;
 
             try {
-                // 🚨 FIX: Upload the report image FIRST if they attached one!
                 if (fileInput && fileInput.files.length > 0) {
                     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading Image...';
                     
@@ -734,7 +705,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving Notes...';
 
-                // Now officially mark the appointment complete with notes AND the report url
                 await fetch(`${API_BASE}/providers/bookings/${id}/status`, { 
                     method: 'PATCH', 
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
@@ -757,9 +727,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // =========================================================================
-    // --- 13. PROFILE PHOTO UPLOAD LOGIC ---
-    // =========================================================================
     function setupDocumentUpload() {
         const fileInput = document.getElementById("profile-photo-input");
         const triggerBtn = document.getElementById("btn-trigger-upload");
@@ -813,9 +780,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // =========================================================================
-    // --- 14. LOGOUT AND INITIALIZATION ---
-    // =========================================================================
     const logout = (e) => { 
         e.preventDefault(); 
         localStorage.clear(); 
