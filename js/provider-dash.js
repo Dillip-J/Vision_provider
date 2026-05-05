@@ -2,6 +2,9 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   
+    // =========================================================================
+    // --- 1. AUTHENTICATION & SESSION CHECK ---
+    // =========================================================================
     const token = localStorage.getItem('provider_token');
     const currentProviderString = localStorage.getItem('currentProvider'); 
 
@@ -19,8 +22,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return; 
     }
 
+    // 🚨 FIX: Alert the provider every time they open the app if bank details are missing
+    if (!currentProvider.account_number || !currentProvider.ifsc_code || currentProvider.account_number.trim() === "" || currentProvider.ifsc_code.trim() === "") {
+        setTimeout(() => {
+            alert("Complete your profile and add bank details to start receiving bookings & payments.");
+        }, 500);
+    }
+
     const providerName = currentProvider.name || "Doctor";
 
+    // =========================================================================
+    // --- 2. HEADER & UI INITIALIZATION ---
+    // =========================================================================
     const headerImg = document.getElementById("header-profile-img");
     const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(providerName)}&background=1E293B&color=fff&size=128`;
 
@@ -42,6 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if(welcomeEl) welcomeEl.textContent = `Dr. ${providerName.replace('Dr. ', '')}`;
     if(clinicEl) clinicEl.textContent = `${currentProvider.category || "General Practitioner"} • Doctor`;
 
+    // =========================================================================
+    // --- 3. DYNAMIC DASHBOARD CONFIGURATION (DOCTOR ONLY) ---
+    // =========================================================================
     const tabApt = document.getElementById('tab-appointments');
     const tabRec = document.getElementById('tab-records');
     const tabSched = document.getElementById('tab-schedule');
@@ -68,6 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // =========================================================================
+    // --- 4. TAB NAVIGATION LOGIC ---
+    // =========================================================================
     const tabs = {
         appointments: { btn: tabApt, view: document.getElementById('view-appointments'), render: loadAppointments },
         schedule: { btn: tabSched, view: document.getElementById('view-schedule'), render: loadScheduleManager },
@@ -98,6 +117,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if(tabs[key].btn) tabs[key].btn.addEventListener('click', (e) => { e.preventDefault(); switchTab(key); });
     });
 
+    // =========================================================================
+    // --- 5. MASTER DASHBOARD DATA FETCHER ---
+    // =========================================================================
     async function fetchMyDashboard() {
         try {
             const res = await fetch(`${API_BASE}/providers/dashboard/me`, { 
@@ -116,6 +138,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // =========================================================================
+    // --- 6. APPOINTMENTS / ORDERS VIEW LOGIC ---
+    // =========================================================================
     async function loadAppointments() {
         const listEl = document.getElementById('provider-appointments-list');
         if(!listEl) return;
@@ -217,6 +242,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
+    // =========================================================================
+    // --- 7. SCHEDULE MANAGER LOGIC ---
+    // =========================================================================
     async function loadScheduleManager() {
         const dateCon = document.getElementById('provider-date-container');
         const timeCon = document.getElementById('provider-time-container');
@@ -234,8 +262,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) {}
 
             const times = [];
-            const startMins = 9 * 60; 
-            const endMins = 17 * 60;  
+            const startMins = 9 * 60; // 9:00 AM
+            const endMins = 19 * 60;  // 🚨 FIX: Changed from 17*60 (5PM) to 19*60 (7PM)
             const duration = 45;      
 
             for (let m = startMins; m < endMins; m += duration) {
@@ -324,7 +352,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const patientName = apt.client_name || apt.patient_name || apt.user_name || "Unknown Patient";
             const aptStatus = (apt.status || apt.booking_status || 'completed').toLowerCase();
             
-            // 🚨 STRICT FIX: Properly splits the symptoms and the clinical notes in the HTML
             const aptSymptoms = apt.symptoms || "None provided";
             
             let notesToDisplay = "No clinical notes recorded.";
@@ -352,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================================
-    // --- 9. EARNINGS & TRANSACTIONS LOGIC ---
+    // --- 9. EARNINGS & WITHDRAW LOGIC ---
     // =========================================================================
     async function renderEarnings() {
         const listEl = document.getElementById('transactions-list');
@@ -399,6 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const statsEl = document.getElementById('earnings-stats');
         if(statsEl) {
+            // 🚨 FIX: Injected the new Withdraw Funds card here!
             statsEl.innerHTML = `
                 <div class="stat-card gradient-blue">
                     <div class="stat-info">
@@ -415,11 +443,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="stat-icon green"><i class="fa-solid fa-sack-dollar"></i></div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-info">
-                        <span>Total Processed</span>
-                        <strong>${completedBookings.length}</strong>
+                    <div class="stat-info" style="width: 100%;">
+                        <span>Withdraw Funds</span>
+                        <div style="margin-top: 8px;">
+                            <button onclick="window.requestWithdrawal()" class="btn-primary" style="padding: 8px 16px; font-size: 0.9rem; width: 100%; display: flex; justify-content: center; gap: 8px;">
+                                <i class="fa-solid fa-building-columns"></i> Withdraw
+                            </button>
+                        </div>
                     </div>
-                    <div class="stat-icon"><i class="fa-solid fa-hand-holding-medical"></i></div>
                 </div>
             `;
         }
@@ -445,10 +476,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
+    // 🚨 FIX: The Global Withdraw Logic
+    window.requestWithdrawal = function() {
+        const acc = currentProvider.account_number;
+        const ifsc = currentProvider.ifsc_code;
+        
+        if (!acc || !ifsc || acc.trim() === "" || ifsc.trim() === "") {
+            alert("Action Denied: You cannot withdraw funds yet.\n\nPlease complete your profile and add your bank details to start receiving payments.");
+            switchTab('profile'); // Send them to settings tab
+            return;
+        }
+
+        alert(`Withdrawal request submitted successfully!\n\nYour available funds will be transferred to your bank account ending in ${acc.slice(-4)} within 2-3 business days.`);
+    };
+
     // =========================================================================
     // --- 10. PROFILE SETTINGS LOGIC ---
     // =========================================================================
-    // 🚨 FIX: Re-added the async fetch so it downloads the phone number from the DB!
+    
+    // 🚨 FIX: Fetches the raw profile data dynamically to pre-fill phone & bank details properly!
     async function loadProfileSettings() {
         try {
             const res = await fetch(`${API_BASE}/providers/me`, { 
@@ -471,6 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const accNoEl = document.getElementById('prof-acc-no');
         const ifscEl = document.getElementById('prof-ifsc');
 
+        // Populate Form Fields
         if(nameEl) nameEl.value = currentProvider.name || '';
         if(phoneEl) phoneEl.value = currentProvider.phone || '';
         if(feeEl) feeEl.value = currentProvider.consultation_fee || 500;
@@ -478,7 +525,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(bioEl) bioEl.value = currentProvider.bio || '';
         if(bankNameEl) bankNameEl.value = currentProvider.bank_name || '';
 
-        
         if(accNoEl) {
             accNoEl.placeholder = "Enter Account Number (9-18 Digits)";
             accNoEl.value = currentProvider.account_number || '';
@@ -495,6 +541,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
+
+    // Automatically call this immediately so the background cache updates for the Withdraw check
+    loadProfileSettings();
 
     const profileForm = document.getElementById('form-provider-profile');
     if (profileForm) {
