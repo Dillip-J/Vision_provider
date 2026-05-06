@@ -464,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const ifsc = currentProvider.ifsc_code;
         
         if (!acc || !ifsc || acc.trim() === "" || ifsc.trim() === "") {
-            alert("Action Denied: You cannot withdraw funds yet.\n\nPlease complete your profile and add your bank details to start receiving payments.");
+            alert("Action Denied: You cannot withdraw funds yet.\n\nPlease complete your profile and add your bank details to withdraw payments.");
             switchTab('profile'); 
             return;
         }
