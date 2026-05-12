@@ -372,147 +372,298 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>
                     <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;"><strong>Symptoms:</strong> ${aptSymptoms}</div>
                     <div class="note-preview"><strong>Notes:</strong> ${notesToDisplay}</div>
-                </td>
+                </td> 
             </tr>
             `;
         }).join('');
     }
 
-    async function renderEarnings() {
-        const listEl = document.getElementById('transactions-list');
-        if(!listEl) return;
+    // async function renderEarnings() {
+    //     const listEl = document.getElementById('transactions-list');
+    //     if(!listEl) return;
 
-        const dashboardData = await fetchMyDashboard();
+    //     // Fetch fresh data from the backend
+    //     const dashboardData = await fetchMyDashboard();
         
-        let myBookings = [];
-        if (Array.isArray(dashboardData)) {
-            myBookings = dashboardData;
-        } else if (dashboardData && dashboardData.items) {
-            myBookings = dashboardData.items;
-        }
+    //     let myBookings = [];
+    //     if (Array.isArray(dashboardData)) {
+    //         myBookings = dashboardData;
+    //     } else if (dashboardData && dashboardData.items) {
+    //         myBookings = dashboardData.items;
+    //     }
         
-        const completedBookings = myBookings.filter(b => {
-            const stat = (b.status || b.booking_status || '').toLowerCase();
-            return stat === 'completed';
-        });
+    //     const completedBookings = myBookings.filter(b => {
+    //         const stat = (b.status || b.booking_status || '').toLowerCase();
+    //         return stat === 'completed';
+    //     });
 
-        const getBookingPrice = (b) => {
-            if (b.price != null) return parseFloat(b.price);
-            if (b.total_amount != null) return parseFloat(b.total_amount);
-            if (b.amount != null) return parseFloat(b.amount);
-            return 500; 
-        };
+    //     // 🚨 STRICT FIX: Read financials directly from the FastAPI Database response!
+    //     const financials = dashboardData.financials || {
+    //         lifetime_earnings: 0,
+    //         total_withdrawn: 0,
+    //         pending_withdrawal: 0,
+    //         available_balance: 0
+    //     };
+
+    //     const realLifetimeEarnings = financials.lifetime_earnings;
+    //     const totalWithdrawn = financials.total_withdrawn;
+    //     const pendingWithdrawal = financials.pending_withdrawal;
+    //     const availableBalance = financials.available_balance;
         
-        let realLifetimeEarnings = 0;
-        completedBookings.forEach(b => {
-            realLifetimeEarnings += getBookingPrice(b); 
-        });
+    //     // Save globally so the button knows how much to request
+    //     window.currentAvailableBalance = availableBalance; 
 
-        const pid = currentProvider.provider_id || currentProvider.id;
-        const totalWithdrawn = parseFloat(localStorage.getItem(`withdrawn_${pid}`)) || 0;
-        const pendingWithdrawal = parseFloat(localStorage.getItem(`pending_withdraw_${pid}`)) || 0;
-        
-        const availableBalance = realLifetimeEarnings - totalWithdrawn - pendingWithdrawal;
-        window.currentAvailableBalance = availableBalance; 
+    //     const formatMoney = (amount) => new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount || 0);
 
-        const formatMoney = (amount) => new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount || 0);
+    //     const statsEl = document.getElementById('earnings-stats');
+    //     if(statsEl) {
+    //         statsEl.innerHTML = `
+    //             <div class="stat-card gradient-blue">
+    //                 <div class="stat-info">
+    //                     <span>Available Balance</span>
+    //                     <strong style="font-size: 2rem;">₹${formatMoney(availableBalance)}</strong>
+    //                 </div>
+    //                 <div class="stat-icon"><i class="fa-solid fa-wallet"></i></div>
+    //             </div>
 
-        const statsEl = document.getElementById('earnings-stats');
-        if(statsEl) {
-            statsEl.innerHTML = `
-                <div class="stat-card gradient-blue">
-                    <div class="stat-info">
-                        <span>Available Balance</span>
-                        <strong style="font-size: 2rem;">₹${formatMoney(availableBalance)}</strong>
-                    </div>
-                    <div class="stat-icon"><i class="fa-solid fa-wallet"></i></div>
-                </div>
+    //             <div class="stat-card">
+    //                 <div class="stat-info">
+    //                     <span>Lifetime Earnings</span>
+    //                     <strong>₹${formatMoney(realLifetimeEarnings)}</strong>
+    //                 </div>
+    //                 <div class="stat-icon green"><i class="fa-solid fa-sack-dollar"></i></div>
+    //             </div>
 
-                <div class="stat-card">
-                    <div class="stat-info">
-                        <span>Lifetime Earnings</span>
-                        <strong>₹${formatMoney(realLifetimeEarnings)}</strong>
-                    </div>
-                    <div class="stat-icon green"><i class="fa-solid fa-sack-dollar"></i></div>
-                </div>
-
-                <div class="stat-card" style="border: 2px solid var(--primary-blue); background: rgba(59, 130, 246, 0.05);">
-                    <div class="stat-info" style="width: 100%;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <span style="font-weight: 600;">Total Withdrawn:</span>
-                            <strong class="text-green">₹${formatMoney(totalWithdrawn)}</strong>
-                        </div>
+    //             <div class="stat-card" style="border: 2px solid var(--primary-blue); background: rgba(59, 130, 246, 0.05);">
+    //                 <div class="stat-info" style="width: 100%;">
+    //                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+    //                         <span style="font-weight: 600;">Total Withdrawn:</span>
+    //                         <strong class="text-green">₹${formatMoney(totalWithdrawn)}</strong>
+    //                     </div>
                         
-                        ${pendingWithdrawal > 0 ? `<div style="font-size: 0.85rem; color: #F59E0B; margin-bottom: 8px;"><i class="fa-solid fa-spinner fa-spin"></i> Processing: ₹${formatMoney(pendingWithdrawal)}</div>` : ''}
+    //                     ${pendingWithdrawal > 0 ? `<div style="font-size: 0.85rem; color: #F59E0B; margin-bottom: 8px;"><i class="fa-solid fa-spinner fa-spin"></i> Pending Approval: ₹${formatMoney(pendingWithdrawal)}</div>` : ''}
                         
-                        <button id="withdraw-btn" onclick="window.requestWithdrawal()" class="btn-primary ${availableBalance <= 0 || pendingWithdrawal > 0 ? 'disabled' : ''}" style="width: 100%; display: flex; justify-content: center; gap: 8px;" ${availableBalance <= 0 || pendingWithdrawal > 0 ? 'disabled' : ''}>
-                            <i class="fa-solid fa-building-columns"></i> 
-                            ${pendingWithdrawal > 0 ? 'Withdrawal in Progress...' : 'Withdraw ₹' + formatMoney(availableBalance)}
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
+    //                     <button id="withdraw-btn" onclick="window.requestWithdrawal()" class="btn-primary ${availableBalance <= 0 || pendingWithdrawal > 0 ? 'disabled' : ''}" style="width: 100%; display: flex; justify-content: center; gap: 8px;" ${availableBalance <= 0 || pendingWithdrawal > 0 ? 'disabled' : ''}>
+    //                         <i class="fa-solid fa-building-columns"></i> 
+    //                         ${pendingWithdrawal > 0 ? 'Withdrawal in Progress...' : 'Withdraw ₹' + formatMoney(availableBalance)}
+    //                     </button>
+    //                 </div>
+    //             </div>
+    //         `;
+    //     }
 
-        if(completedBookings.length === 0) { listEl.innerHTML = `<div class="empty-state">No earnings yet.</div>`; return; }
+    //     if(completedBookings.length === 0) { listEl.innerHTML = `<div class="empty-state">No earnings yet.</div>`; return; }
 
-        listEl.innerHTML = completedBookings.map(b => {
-            const patientName = b.client_name || b.patient_name || b.user_name || "Patient";
-            const bookingId = b.raw_id || b.booking_id || b.id;
-            return `
-            <div class="tx-card">
-                <div class="tx-left">
-                    <div class="tx-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
-                    <div><span class="tx-name">${patientName}</span><span class="tx-detail">${bookingId}</span></div>
-                </div>
-                <div class="tx-right">
-                    <span class="tx-amount">+ ₹${formatMoney(getBookingPrice(b))}</span> 
-                    <br>
-                    <span class="status-badge completed" style="display: inline-block; margin-top: 4px;">PAID ONLINE</span>
-                </div>
-            </div>
-            `;
-        }).join('');
-    }
+    //     const getBookingPrice = (b) => {
+    //         if (b.price != null) return parseFloat(b.price);
+    //         if (b.total_amount != null) return parseFloat(b.total_amount);
+    //         if (b.amount != null) return parseFloat(b.amount);
+    //         return 500; 
+    //     };
 
-    window.requestWithdrawal = function() {
-        const acc = currentProvider.account_number;
-        const ifsc = currentProvider.ifsc_code;
+    //     listEl.innerHTML = completedBookings.map(b => {
+    //         const patientName = b.client_name || b.patient_name || b.user_name || "Patient";
+    //         const bookingId = b.raw_id || b.booking_id || b.id;
+    //         return `
+    //         <div class="tx-card">
+    //             <div class="tx-left">
+    //                 <div class="tx-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+    //                 <div><span class="tx-name">${patientName}</span><span class="tx-detail">${bookingId}</span></div>
+    //             </div>
+    //             <div class="tx-right">
+    //                 <span class="tx-amount">+ ₹${formatMoney(getBookingPrice(b))}</span> 
+    //                 <br>
+    //                 <span class="status-badge completed" style="display: inline-block; margin-top: 4px;">PAID ONLINE</span>
+    //             </div>
+    //         </div>
+    //         `;
+    //     }).join('');
+    // }
+
+    // // 🚨 STRICT FIX: Calls the actual FastAPI Backend to store the withdrawal!
+    // window.requestWithdrawal = async function() {
+    //     const acc = currentProvider.account_number;
+    //     const ifsc = currentProvider.ifsc_code;
         
-        if (!acc || !ifsc || acc.trim() === "" || ifsc.trim() === "") {
-            alert("Action Denied: You cannot withdraw funds yet.\n\nPlease complete your profile and add your bank details to start receiving payments.");
-            switchTab('profile'); 
-            return;
-        }
+    //     if (!acc || !ifsc || acc.trim() === "" || ifsc.trim() === "") {
+    //         alert("Action Denied: You cannot withdraw funds yet.\n\nPlease complete your profile and add your bank details to start receiving payments.");
+    //         switchTab('profile'); 
+    //         return;
+    //     }
 
-        const amtToWithdraw = window.currentAvailableBalance || 0;
-        if (amtToWithdraw <= 0) {
-            alert("You have no available funds to withdraw.");
-            return;
-        }
+    //     const amtToWithdraw = window.currentAvailableBalance || 0;
+    //     if (amtToWithdraw <= 0) {
+    //         alert("You have no available funds to withdraw.");
+    //         return;
+    //     }
 
-        const pid = currentProvider.provider_id || currentProvider.id;
-        
-        localStorage.setItem(`pending_withdraw_${pid}`, amtToWithdraw);
-        
-        alert(`Withdrawal initiated successfully!\n\nThe amount of ₹${amtToWithdraw} will be credited to your bank account ending in ${acc.slice(-4)} within 24 hours.`);
-        
-        renderEarnings(); 
+    //     const withdrawBtn = document.getElementById('withdraw-btn');
+    //     const originalText = withdrawBtn.innerHTML;
+    //     withdrawBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+    //     withdrawBtn.disabled = true;
 
-        setTimeout(() => {
-            let currentWithdrawn = parseFloat(localStorage.getItem(`withdrawn_${pid}`)) || 0;
-            let pending = parseFloat(localStorage.getItem(`pending_withdraw_${pid}`)) || 0;
+    //     try {
+    //         // Send the request to your database
+    //         const response = await fetch(`${API_BASE}/providers/withdraw`, {
+    //             method: 'POST',
+    //             headers: { 
+    //                 'Content-Type': 'application/json',
+    //                 'Authorization': `Bearer ${token}` 
+    //             }
+    //         });
+
+    //         const data = await response.json();
+
+    //         if (!response.ok) {
+    //             throw new Error(data.detail || "Failed to initiate withdrawal.");
+    //         }
+
+    //         alert(`Success! The amount of ₹${amtToWithdraw} has been requested and will be credited to your bank account ending in ${acc.slice(-4)} once approved by the Admin.`);
             
-            localStorage.setItem(`withdrawn_${pid}`, currentWithdrawn + pending);
-            localStorage.removeItem(`pending_withdraw_${pid}`);
+    //         // Re-render to instantly pull the new pending balance from the DB
+    //         renderEarnings(); 
+
+    //     } catch (error) {
+    //         alert(`Error: ${error.message}`);
+    //         withdrawBtn.innerHTML = originalText;
+    //         withdrawBtn.disabled = false;
+    //     }
+    // };
+    // async function renderEarnings() {
+    //     const listEl = document.getElementById('transactions-list');
+    //     if(!listEl) return;
+
+    //     const dashboardData = await fetchMyDashboard();
+        
+    //     let myBookings = [];
+    //     if (Array.isArray(dashboardData)) {
+    //         myBookings = dashboardData;
+    //     } else if (dashboardData && dashboardData.items) {
+    //         myBookings = dashboardData.items;
+    //     }
+        
+    //     const completedBookings = myBookings.filter(b => {
+    //         const stat = (b.status || b.booking_status || '').toLowerCase();
+    //         return stat === 'completed';
+    //     });
+
+    //     const getBookingPrice = (b) => {
+    //         if (b.price != null) return parseFloat(b.price);
+    //         if (b.total_amount != null) return parseFloat(b.total_amount);
+    //         if (b.amount != null) return parseFloat(b.amount);
+    //         return 500; 
+    //     };
+        
+    //     let realLifetimeEarnings = 0;
+    //     completedBookings.forEach(b => {
+    //         realLifetimeEarnings += getBookingPrice(b); 
+    //     });
+
+    //     const pid = currentProvider.provider_id || currentProvider.id;
+    //     const totalWithdrawn = parseFloat(localStorage.getItem(`withdrawn_${pid}`)) || 0;
+    //     const pendingWithdrawal = parseFloat(localStorage.getItem(`pending_withdraw_${pid}`)) || 0;
+        
+    //     const availableBalance = realLifetimeEarnings - totalWithdrawn - pendingWithdrawal;
+    //     window.currentAvailableBalance = availableBalance; 
+
+    //     const formatMoney = (amount) => new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount || 0);
+
+    //     const statsEl = document.getElementById('earnings-stats');
+    //     if(statsEl) {
+    //         statsEl.innerHTML = `
+    //             <div class="stat-card gradient-blue">
+    //                 <div class="stat-info">
+    //                     <span>Available Balance</span>
+    //                     <strong style="font-size: 2rem;">₹${formatMoney(availableBalance)}</strong>
+    //                 </div>
+    //                 <div class="stat-icon"><i class="fa-solid fa-wallet"></i></div>
+    //             </div>
+
+    //             <div class="stat-card">
+    //                 <div class="stat-info">
+    //                     <span>Lifetime Earnings</span>
+    //                     <strong>₹${formatMoney(realLifetimeEarnings)}</strong>
+    //                 </div>
+    //                 <div class="stat-icon green"><i class="fa-solid fa-sack-dollar"></i></div>
+    //             </div>
+
+    //             <div class="stat-card" style="border: 2px solid var(--primary-blue); background: rgba(59, 130, 246, 0.05);">
+    //                 <div class="stat-info" style="width: 100%;">
+    //                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+    //                         <span style="font-weight: 600;">Total Withdrawn:</span>
+    //                         <strong class="text-green">₹${formatMoney(totalWithdrawn)}</strong>
+    //                     </div>
+                        
+    //                     ${pendingWithdrawal > 0 ? `<div style="font-size: 0.85rem; color: #F59E0B; margin-bottom: 8px;"><i class="fa-solid fa-spinner fa-spin"></i> Processing: ₹${formatMoney(pendingWithdrawal)}</div>` : ''}
+                        
+    //                     <button id="withdraw-btn" onclick="window.requestWithdrawal()" class="btn-primary ${availableBalance <= 0 || pendingWithdrawal > 0 ? 'disabled' : ''}" style="width: 100%; display: flex; justify-content: center; gap: 8px;" ${availableBalance <= 0 || pendingWithdrawal > 0 ? 'disabled' : ''}>
+    //                         <i class="fa-solid fa-building-columns"></i> 
+    //                         ${pendingWithdrawal > 0 ? 'Withdrawal in Progress...' : 'Withdraw ₹' + formatMoney(availableBalance)}
+    //                     </button>
+    //                 </div>
+    //             </div>
+    //         `;
+    //     }
+
+    //     if(completedBookings.length === 0) { listEl.innerHTML = `<div class="empty-state">No earnings yet.</div>`; return; }
+
+    //     listEl.innerHTML = completedBookings.map(b => {
+    //         const patientName = b.client_name || b.patient_name || b.user_name || "Patient";
+    //         const bookingId = b.raw_id || b.booking_id || b.id;
+    //         return `
+    //         <div class="tx-card">
+    //             <div class="tx-left">
+    //                 <div class="tx-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+    //                 <div><span class="tx-name">${patientName}</span><span class="tx-detail">${bookingId}</span></div>
+    //             </div>
+    //             <div class="tx-right">
+    //                 <span class="tx-amount">+ ₹${formatMoney(getBookingPrice(b))}</span> 
+    //                 <br>
+    //                 <span class="status-badge completed" style="display: inline-block; margin-top: 4px;">PAID ONLINE</span>
+    //             </div>
+    //         </div>
+    //         `;
+    //     }).join('');
+    // }
+
+    // window.requestWithdrawal = function() {
+    //     const acc = currentProvider.account_number;
+    //     const ifsc = currentProvider.ifsc_code;
+        
+    //     if (!acc || !ifsc || acc.trim() === "" || ifsc.trim() === "") {
+    //         alert("Action Denied: You cannot withdraw funds yet.\n\nPlease complete your profile and add your bank details to start receiving payments.");
+    //         switchTab('profile'); 
+    //         return;
+    //     }
+
+    //     const amtToWithdraw = window.currentAvailableBalance || 0;
+    //     if (amtToWithdraw <= 0) {
+    //         alert("You have no available funds to withdraw.");
+    //         return;
+    //     }
+
+    //     const pid = currentProvider.provider_id || currentProvider.id;
+        
+    //     localStorage.setItem(`pending_withdraw_${pid}`, amtToWithdraw);
+        
+    //     alert(`Withdrawal initiated successfully!\n\nThe amount of ₹${amtToWithdraw} will be credited to your bank account ending in ${acc.slice(-4)} within 24 hours.`);
+        
+    //     renderEarnings(); 
+
+    //     setTimeout(() => {
+    //         let currentWithdrawn = parseFloat(localStorage.getItem(`withdrawn_${pid}`)) || 0;
+    //         let pending = parseFloat(localStorage.getItem(`pending_withdraw_${pid}`)) || 0;
             
-            alert(`Success! ₹${pending} has been officially credited to your bank account.`);
+    //         localStorage.setItem(`withdrawn_${pid}`, currentWithdrawn + pending);
+    //         localStorage.removeItem(`pending_withdraw_${pid}`);
             
-            if(document.getElementById('view-earnings').classList.contains('active')) {
-                renderEarnings();
-            }
-        }, 8000); 
-    };
+    //         alert(`Success! ₹${pending} has been officially credited to your bank account.`);
+            
+    //         if(document.getElementById('view-earnings').classList.contains('active')) {
+    //             renderEarnings();
+    //         }
+    //     }, 8000); 
+    // };
 
     async function loadProfileSettings() {
         try {
